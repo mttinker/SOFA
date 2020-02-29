@@ -10,7 +10,7 @@ require(lattice)
 require(coda)
 require(readxl)
 # Number bouts
-Nbouts = 1000
+Nbouts = 500
 # Number of prey captures per bout
 Npr_p_bt = 20
 # Set up some variables ------------------------------------------------------
@@ -29,48 +29,52 @@ Pawsz = 47.5 # in mm, for prey size to mass conversions
 # Prey params  
 NPtypes = 7
 prlist = c("can","urc","mus","kcr","sna","was","clm")
-Cal_dens = c(0.755, 0.396, 0.555, 0.732, 1.021, 0.667, 0.920)
-Preytypes = data.frame(Prey=factor(prlist,levels =prlist))
-# Size class params (gamma fxn): ceiling(rgamma(1,shape=Spar1*Spar2, rate=Spar2))
-Spar1 = c(9,3.5,3,4,1.5,7.5,3)
-Spar2 = c(2,3,3,2,5.0,2.0,3)
-# N-items params (gamma fxn): ceiling(rgamma(1,shape=Npar1*Npar2, rate=npar2))
-Npar1 = c(0.5,3,3,1,9,0.5,2)
-Npar2 = c(7.0,2,2,7,1,7.0,2)
-# HT params for adjusting baseline fxn
-Hadj = c(1.1,.9,.3,1,.4,.8,.3)
-# Note: HT(s) = rpois(60*PreySzLst$SzRatio^1.5*Hadj)
 # Biomass params (for power function): Mass = PFa[i]*(Pawsz*PreySzLst$SzRatio[j])^PFb[i]
 # NOTE : replace this with function that fits these params from prey data
 PFa = c(.0053, 0.0005, 0.0034, 0.00882, 0.00187, 0.00023, 0.00046)
 PFb = c(2.195, 2.9035, 2.0464, 2.15248, 2.49975, 2.82750, 2.70797)
+Cal_dns_mn = c(1.22, 0.393, 0.497, 0.733, 1.021, 0.505, .535)
+Cal_dns_sg = c(0.44, 0.05, 0.02, 0.188, 0.15, 0.05, 0.05)
+Preytypes = data.frame(Prey=factor(prlist,levels =prlist))
+# Relative freq of capture:
+eta_CAP = c(.05,.2,.23,.12,.18,.08,.14)
+tau_CAP = 2
+Drchvec = eta_CAP*(tau_CAP*NPtypes)
+# To set random prey type capture probs per bout: Pprey = rdirichlet(1,Drchvec)
+#   (then use multinomial to assigh prey)
+# Size class params (gamma fxn): ceiling(rgamma(1,shape=Spar1*Spar2, rate=Spar2))
+Spar1 = c(9,3.5,3,4,1.5,7.5,3.2)
+Spar2 = c(2,3.0,3,2,5.0,2.0,2)
+# N-items params (gamma fxn): ceiling(rgamma(1,shape=Npar1*Npar2, rate=npar2))
+Npar1 = c(0.6,2.5,3,1,9,0.8,2)
+Npar2 = c(7.0,2,5,2,1,5.0,2)
+# HT params for adjusting baseline fxn
+Hadj = c(1.4,.9,.3, 1.2, .4,.8,.3)
+# Note: HT(s) = rpois((55*PreySzLst$SzRatio^1.5)*Hadj)
 # Dive succes rates (determines number of unsucc dives prior to successful dive)
-Lmbda = c(.6,.9,.95,.9,.99,.55,.85)
+Lmbda = c(.6,.93,.97,.88,.99,.55,.8)
 # Note: use neg binomial to get number of preceeding unsucc dives given prob:
 # NumUnsucc = rnbinom(1,1,Lmbda[i])
 # Second prey type can be captured on single dive (must be another with MultP==1)?
 MultP = c(0,1,1,1,0,0,1)
-PrbSc = 0.333 # for prey types allowing "second types", prob of a second prey type
+PrbSc = 0.35 # for prey types allowing "second types", prob of a second prey type
 # Prob of positive ID prey, logit fxn:
-#   probID_Prey = inv.logit(B0 + B1*Sz_cm + B2*(HT_min) + B3[p])
+#   probID_Prey = inv.logit(B0 + B1*log(Sz_cm) + B2*log(HT) + B3*log(Sz_cm)*log(HT))
 B0 = -1.1 # Intercept
-B1 = 0.3 # Effect of size (cm)  
-B2 = .9 # Effect of HT (in decimal minutes)
-B3 = c(1,0,0,0.5,0.5,1,0) # Prey-specific modifiers of ID prob
+B1 = .2 # Effect of size (cm)  
+B2 = .05 # Effect of HT (in decimal minutes)
+B3 = .4 # Effect of size*HT interaction
+# B3 = c(1,0,0,0.5,0.5,1,0) # Prey-specific modifiers of ID prob
 #
 # Prob of ID Nitems: probID_N = inv.logit(6 - 3*Nitm^0.25)
 # Prob of ID Sz:   inv.logit(1 + .2*Sz_cm)
 #
 # Prob of carry over
-CryOv_P = c(.2,0,0,0,0,.1,0)
-CryOv_Psz = c(0,0,.5,1)
+CryOv_P = c(.2,0,0,0,0,.15,0)
+CryOv_Psz = c(0,.1,.5,1)
 # Proportion of prey type lost, possible values (only for sizecl >2):
 prplst = c(0,.5,.25) # Nlst = prplst[pmin(3,ceiling(rgamma(1,shape=1, rate=1.5)))]
 prplstC = c(0, 0, 1, 1) # Size class-based modifiers for proportion lost vals
-#
-Drchvec = c(1,2,2,2,2,1,2)
-# To set random prey type capture probs per bout: Pprey = rdirichlet(1,Drchvec)
-#   (then use multinomial to assigh prey)
 #
 # Initialize variables for foraging data
 Bout = character()
@@ -95,8 +99,8 @@ HT = numeric()
 # Simulate bouts----------------------------------------------------------------------
 rc = 0
 for (b in 1:Nbouts){
-  Prefprey = rmultinom(1,1,Drchvec)*8
-  Pprey = rdirichlet(1,Drchvec+Prefprey)
+  # Prefprey = rmultinom(1,1,Drchvec)*8
+  Pprey = rdirichlet(1,Drchvec)
   Preycaps = rmultinom(Npr_p_bt,1,Pprey)
   dvn = 0
   btid = paste0("Bout_",b)
@@ -157,7 +161,7 @@ for (b in 1:Nbouts){
       Ppnlost[rc] = 0
       Ncrct[rc] = Nitem[rc] - (Ppnlost[rc]*Nitem[rc])
       Mss_est[rc] = (PFa[p]*(Pawsz*Sz_rt[rc])^PFb[p])*Ncrct[rc]  
-      HT[rc] = round((max(5,rpois(1,60*PreySzLst$SzRatio[S]^1.5*Hadj[p]))*Ncrct[rc])/(nco+1))
+      HT[rc] = round((max(5,rpois(1,(55*PreySzLst$SzRatio[S]^1.5)*Hadj[p]))*Ncrct[rc])/(nco+1))
       ST[rc] = HT[rc]
       for(i in 1:nco){
         rc = rc + 1
@@ -255,7 +259,8 @@ for (i in 1:(Nrec)){
   }
   if(i<(Nrec-3)){
     if(SuccessV[i]==1 & SuccessV[i+1]!=0.5){
-      probID_Prey = rbinom(1,1,inv.logit(B0 + B1*Sz_cm[i] + B2*(HT[i]/60) + B3[PreyV[i]]))
+      prbID = inv.logit(B0 + B1*log(Sz_cm[i]) + B2*log(HT[i]) + B3*log(Sz_cm[i])*log(HT[i]))
+      probID_Prey = rbinom(1,1,prbID)
       if(probID_Prey==0){
         PreyObs[i] = "uni"
         PreyVObs[i] = 0
@@ -401,9 +406,10 @@ for (p in 1:NPtypes){
   Lmn_TRUE[p] = weighted.mean(LMDmnP[ii,p],LMDmnP_n[ii,p])
   LMlg = c(LMlg,logit(pmin(0.99,LMDmnP[ii,p]))); Lp = c(Lp,rep(p,length(ii)))   
   ii = which(CRmnP_n[,p] >= MnN)
-  Cmn_TRUE[p] = weighted.mean(CRmnP[ii,p],CRmnP_n[ii,p])
+  ft = lm(CRmnP[ii,p] ~ SmnP[ii,p])
+  Cmn_TRUE[p] = coef(ft)[1] + coef(ft)[2]* Smn_TRUE[p]
   CRate = c(CRate,CRmnP[ii,p]); Cp = c(Cp,rep(p,length(ii)))      
-  Csz = c(Csz,SmnP[ii,p]); Css = c(Css,CRmnP_n[ii,p])
+  Csz = c(Csz,log(SmnP[ii,p])); Css = c(Css,CRmnP_n[ii,p])
 }
 # 
 # Calc OBSERVED params and Allocation of time by prey, per bout -------------------
@@ -430,9 +436,13 @@ if(UseObs==1){
   HTmn = numeric(); Hp = numeric()
   LMlg = numeric(); Lp = numeric()
   CRate = numeric(); Cp = numeric(); Csz = numeric(); Css = numeric()
-  MnN = 1
-  MaxSS = 100
+  eta_prior = numeric()
+  MnN = 3
+  MaxSS = 50
+  Nprcaps = length(which(FdatObs$PreyV>0 & FdatObs$PreyV<NPtypes))
   for (p in 1:(NPtypes-1)){
+    ii = which(FdatObs$PreyV==p)
+    eta_prior[p] = (length(ii)/Nprcaps)*(NPtypes-1)*2.5
     ii = which(SmnP_n[,p] >= MnN)
     ii = ii[order(SmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
     SZmn = c(SZmn,(SmnP[ii,p])); Sp = c(Sp,rep(p,length(ii)))
@@ -448,10 +458,10 @@ if(UseObs==1){
     ii = which(CRmnP_n[,p] >= MnN)
     ii = ii[order(CRmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
     CRate = c(CRate,CRmnP[ii,p]); Cp = c(Cp,rep(p,length(ii)))      
-    Csz = c(Csz,SmnP[ii,p]) ; Css = c(Css,CRmnP_n[ii,p])
+    Csz = c(Csz,log(SmnP[ii,p])) ; Css = c(Css,CRmnP_n[ii,p])
   }
   # Repeat for un-id prey
-  MaxSS = 500
+  MaxSS = 100
   p = NPtypes
   ii = which(SmnP_n[,p] >= MnN)
   ii = ii[order(SmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
@@ -467,7 +477,7 @@ if(UseObs==1){
   LMlgU = logit(pmin(0.99,LMDmnP[ii,p])); 
 }
 NU = numeric()
-NU[1] = length(SZmnU); NU[2] = length(NImnU); NU[3] = length(HTmnU); NU[4] = length(LMlgU);
+NU[1] = length(SZmnU);  NU[2] = length(HTmnU); # NU[3] = length(NImnU);NU[4] = length(LMlgU);
 NSz = length(Sp)
 NNi = length(Np)
 NHt = length(Hp)
@@ -476,22 +486,22 @@ NCR = length(Cp)
 
 # Set up and run Stan model to fit to data --------------------------------------------
 # Set options for STAN
-options(mc.cores = parallel::detectCores())
-rstan_options(auto_write = TRUE)
+  options(mc.cores = parallel::detectCores())
+  rstan_options(auto_write = TRUE)
 #
 fitmodel = c("SOFAfit.stan")
 #
 stan.data <- list(Nbouts=Nbouts,K=NPtypes,Km1=NPtypes-1,EffortP=TotMinP,
-                  NSz=NSz,NNi=NNi,NHt=NHt,NLm=NLm,NCR=NCR,NU=NU,
-                  SZmnU=SZmnU,NImnU=NImnU,HTmnU=HTmnU,LMlgU=LMlgU,
-                  Sp=Sp,Np=Np,Hp=Hp,Lp=Lp,Cp=Cp,SZmn=SZmn,NImn=NImn,
-                  HTmn=HTmn,LMlg=LMlg,CRate=CRate,Csz=Csz,Css=Css,Cal_dens=Cal_dens)
+                  NSz=NSz,NHt=NHt,NCR=NCR,NU=NU,SZmnU=SZmnU,HTmnU=HTmnU,  
+                  Sp=Sp,Hp=Hp,Cp=Cp,SZmn=SZmn,HTmn=HTmn,CRate=CRate,Csz=Csz,
+                  Css=Css,Cal_dns_mn=Cal_dns_mn,Cal_dns_sg=Cal_dns_sg) 
 #
-params <- c("eta","SZ","NI","HT","LM","CR","PD","ER","CRmn","ERmn","Pid","tau",
-            "beta0","beta1","beta2","sigP","phi1","phi2","psi1","psi2")
+params <- c("eta","SZ","HT","CR","PD","ER","CRmn","ERmn","Pid","tau",
+            "phi1","phi2","muSZ","muHT","sigSZ","sigHT","sigCR",
+            "muSZ_u","muHT_u","sigSZ_u","sigHT_u","maxPunid") # NI, LM,
 #
 nsamples <- 500
-nburnin <- 500
+nburnin <- 250
 cores = detectCores()
 ncore = min(20,cores-1)
 #
@@ -505,8 +515,6 @@ out <- stan(
   iter = nburnin+nsamples, # total number of iterations per chain
   cores = ncore,           # number of available cores 
   refresh = 100           # show progress every 'refresh' iterations
-  # increase adapt_delta and max_treedepth to help find optimal vals
-  # control = list(adapt_delta = 0.959, max_treedepth = 12) 
 )
 #
 mcmc <- as.matrix(out)
@@ -515,7 +523,6 @@ Nsims = nrow(mcmc)
 sumstats = summary(out)$summary
 vns = row.names(sumstats)
 #
-rstan::traceplot(out, pars=c("beta0","beta1","beta2"), inc_warmup = F, nrow = 3)
-
 rstan::traceplot(out, pars=c("eta","Pid"), inc_warmup = F, nrow = 7)
-
+rstan::traceplot(out, pars=c("maxPunid"), inc_warmup = F, nrow = 1)
+plot(out,pars="eta")

@@ -30,7 +30,7 @@ layout(matrix(c(1), 1, 1, byrow = TRUE))
 # mod number items (2 to 6): M = 3 and b = 2
 # larger number items (5 to 15): M = 9 and b = 1
 prplst = c(0,.5,.25); Ndvs = 20
-M = 1.5
+M = 3.5
 b = 2
 hist(ceiling(rgamma(10000,shape=M*b, rate=b)))
 mn_Ni = numeric()
@@ -93,5 +93,52 @@ ii = which(is.na(Tot_min) | Tot_min == 0 | UID_ppnT == 1)
 hist(UID_ppnT[-ii])
 hist(ID_ppnT[-ii,1])
 
+
+# DELTA METHOD, for computing variance of combined variables ------------------
+# (either average or weighted average)
+#
+#draw huge sample from 3 variables (x1, x2 and x3) 
+set.seed(1)
+#random variable with variance 25
+x1<-rnorm(n=1000000, mean=3, sd=5)
+#random variable with variance 81
+x2<-rnorm(n=1000000, mean=2, sd=9)
+#random variable with variance 36
+x3<-rnorm(n=1000000, mean=1, sd=6)
+XX = cbind(x1,x2,x3)
+# let q be proportional contributiosn of each xn to combined X
+q = c(.1, .4, .5)
+# compute the weighted average, based on proportional contribution to combined var:
+
+Xwt = XX[,1]*q[1] + XX[,2]*q[2] + XX[,3]*q[3]
+# empiirical mean and sd:
+mean(X.wt)
+sd(X.wt)
+# Calculated mean and sd, delta method:
+mean_approx = sum(q*c(mean(x1),mean(x2),mean(x3)))
+sd_approx = sqrt(var(x1)*q[1]^2 + var(x2)*q[2]^2 + var(x3)*q[3]^2)
+
+# Un-wieghted mean:
+# compute the average
+x.bar<-(x1+x2+x3)/3
+mean(x.bar)
+mean_approx = mean(c(mean(x1),mean(x2),mean(x3)))
   
+# compute the sd of the average , should be close to sqrt((25+81+36)/(3^2))
+sd(x.bar)^2
+sd_approx = sqrt( (var(x1)+var(x2)+var(x3))/(3^2) )
+
+
+# Bhattacharyya distance and coefficient (= degree of overlap between 2 nortmal dists)
+mu = c(.99,1.42)
+sg = c(.16,.14)
+
+D12 = 0.25*log(0.25*(sg[1]^2/sg[2]^2+sg[2]^2/sg[1]^2 +2))+0.25*(((mu[1]-mu[2])^2)/(sg[1]^2+sg[2]^2))
+OL = exp(-D12)
+OL
+
+
+
+
+
 
