@@ -36,7 +36,7 @@ PFb = c(2.195, 2.9035, 2.0464, 2.15248, 2.49975, 2.82750, 2.70797)
 Cal_dns_mn = c(1.22, 0.393, 0.497, 0.733, 1.021, 0.505, .535)
 Cal_dns_sg = c(0.44, 0.05, 0.02, 0.188, 0.15, 0.05, 0.05)
 Preytypes = data.frame(Prey=factor(prlist,levels =prlist))
-# Relative freq of capture:
+# Relative freq of capture for simulations:
 eta_CAP = c(.05,.2,.23,.12,.18,.08,.14)
 tau_CAP = 2
 Drchvec = eta_CAP*(tau_CAP*NPtypes)
@@ -191,7 +191,7 @@ for (b in 1:Nbouts){
       Ppnlost[rc] = prplstC[Size[rc]]*prplst[pmin(3,ceiling(rgamma(1,shape=1, rate=1.5)))]
       Ncrct[rc] = Nitem[rc] - (Ppnlost[rc]*Nitem[rc])
       Mss_est[rc] = (PFa[p]*(Pawsz*Sz_rt[rc])^PFb[p])*Ncrct[rc] 
-      HT[rc] = round(max(5,rpois(1,60*Sz_rt[rc]^1.5*Hadj[p]))*Ncrct[rc])
+      HT[rc] = round(max(5,rpois(1,(55*Sz_rt[rc]^1.5)*Hadj[p]))*Ncrct[rc])
       SecndPrey = rbinom(1,1,PrbSc*MultP[p])
       if(SecndPrey==1){
         p1 = p
@@ -225,7 +225,7 @@ for (b in 1:Nbouts){
         Ppnlost[rc] = prplstC[Size[rc]]*prplst[pmin(3,ceiling(rgamma(1,shape=1, rate=1.5)))]
         Ncrct[rc] = Nitem[rc] - (Ppnlost[rc]*Nitem[rc])
         Mss_est[rc] = (PFa[p]*(Pawsz*Sz_rt[rc])^PFb[p])*Ncrct[rc]
-        HT[rc] = round(max(5,rpois(1,60*Sz_rt[rc]^1.5*Hadj[p]))*Ncrct[rc])
+        HT[rc] = round(max(5,rpois(1,(55*Sz_rt[rc]^1.5)*Hadj[p]))*Ncrct[rc])
         ST[rc] = HT[rc] + HT[rc-1]
         ST[rc-1] = HT[rc] + HT[rc-1]
       }else{
@@ -413,7 +413,7 @@ for (p in 1:NPtypes){
 }
 # 
 # Calc OBSERVED params and Allocation of time by prey, per bout -------------------
-#  plus log(mean) of Sz_cm, Nitm, HT and lambda
+#  plus log(mean) of Sz_cm, HT, Nitm and lambda
 UseObs = 1
 if(UseObs==1){
   NPtypes = length(unique(FdatObs$PreyV[!is.na(FdatObs$PreyV)]))
@@ -433,12 +433,12 @@ if(UseObs==1){
   CRmnP_n = rslt$CRmnP_n
   SZmn = numeric(); Sp = numeric()
   NImn = numeric(); Np = numeric()
-  HTmn = numeric(); Hp = numeric()
+  HTmn = numeric(); Hp = numeric(); Hsz = numeric()
   LMlg = numeric(); Lp = numeric()
   CRate = numeric(); Cp = numeric(); Csz = numeric(); Css = numeric()
   eta_prior = numeric()
   MnN = 3
-  MaxSS = 50
+  MaxSS = 100
   Nprcaps = length(which(FdatObs$PreyV>0 & FdatObs$PreyV<NPtypes))
   for (p in 1:(NPtypes-1)){
     ii = which(FdatObs$PreyV==p)
@@ -452,6 +452,7 @@ if(UseObs==1){
     ii = which(HTmnP_n[,p] >= MnN)
     ii = ii[order(HTmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
     HTmn = c(HTmn,(HTmnP[ii,p])); Hp = c(Hp,rep(p,length(ii)))
+    Hsz = c(Hsz,log(SmnP[ii,p]))
     ii = which(LMDmnP_n[,p] >= MnN)
     ii = ii[order(LMDmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
     LMlg = c(LMlg,logit(pmin(0.99,LMDmnP[ii,p]))); Lp = c(Lp,rep(p,length(ii)))  
@@ -472,6 +473,7 @@ if(UseObs==1){
   ii = which(HTmnP_n[,p] >= MnN)
   ii = ii[order(HTmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
   HTmnU = (HTmnP[ii,p]); 
+  Hsz_u = log(SmnP[ii,p])
   ii = which(LMDmnP_n[,p] >= MnN)
   ii = ii[order(LMDmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
   LMlgU = logit(pmin(0.99,LMDmnP[ii,p])); 
@@ -492,13 +494,13 @@ NCR = length(Cp)
 fitmodel = c("SOFAfit.stan")
 #
 stan.data <- list(Nbouts=Nbouts,K=NPtypes,Km1=NPtypes-1,EffortP=TotMinP,
-                  NSz=NSz,NHt=NHt,NCR=NCR,NU=NU,SZmnU=SZmnU,HTmnU=HTmnU,  
-                  Sp=Sp,Hp=Hp,Cp=Cp,SZmn=SZmn,HTmn=HTmn,CRate=CRate,Csz=Csz,
-                  Css=Css,Cal_dns_mn=Cal_dns_mn,Cal_dns_sg=Cal_dns_sg) 
+                  NSz=NSz,NHt=NHt,NCR=NCR,NU=NU,SZmnU=SZmnU,HTmnU=HTmnU,
+                  Sp=Sp,Hp=Hp,Cp=Cp,SZmn=SZmn,HTmn=HTmn,Hsz=Hsz,Hsz_u=Hsz_u,
+                  CRate=CRate,Csz=Csz,Cal_dns_mn=Cal_dns_mn,Cal_dns_sg=Cal_dns_sg)
 #
 params <- c("eta","SZ","HT","CR","PD","ER","CRmn","ERmn","Pid","tau",
-            "phi1","phi2","muSZ","muHT","sigSZ","sigHT","sigCR",
-            "muSZ_u","muHT_u","sigSZ_u","sigHT_u","maxPunid") # NI, LM,
+            "phi1","phi2","psi1","psi2","muSZ","sigSZ","sigHT","sigCR",
+            "muSZ_u","psi1_u","psi2_u","sigSZ_u","sigHT_u","maxPunid") # NI, LM,
 #
 nsamples <- 500
 nburnin <- 250
@@ -526,3 +528,5 @@ vns = row.names(sumstats)
 rstan::traceplot(out, pars=c("eta","Pid"), inc_warmup = F, nrow = 7)
 rstan::traceplot(out, pars=c("maxPunid"), inc_warmup = F, nrow = 1)
 plot(out,pars="eta")
+plot(out,pars="CR")
+

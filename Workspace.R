@@ -109,7 +109,6 @@ XX = cbind(x1,x2,x3)
 # let q be proportional contributiosn of each xn to combined X
 q = c(.1, .4, .5)
 # compute the weighted average, based on proportional contribution to combined var:
-
 Xwt = XX[,1]*q[1] + XX[,2]*q[2] + XX[,3]*q[3]
 # empiirical mean and sd:
 mean(X.wt)
@@ -118,7 +117,7 @@ sd(X.wt)
 mean_approx = sum(q*c(mean(x1),mean(x2),mean(x3)))
 sd_approx = sqrt(var(x1)*q[1]^2 + var(x2)*q[2]^2 + var(x3)*q[3]^2)
 
-# Un-wieghted mean:
+# Un-wieghted mean of variables:
 # compute the average
 x.bar<-(x1+x2+x3)/3
 mean(x.bar)

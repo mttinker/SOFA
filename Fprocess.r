@@ -171,7 +171,7 @@ Fprocess <- function(Fdat,Nbouts,NPtypes){
         NmnP[b,p] = mean(FD$Ncrct[ii])
       }
       # Mean HT by prey (and sample size)
-      ii = which(FD$SuccessV==1 & FD$PreyV==p & FD$Ncrct>0 & FD$HT>0)
+      ii = which(FD$SuccessV==1 & FD$PreyV==p & FD$Ncrct>0 & FD$HT>0 & FD$Sz_cm>0)
       HTmnP_n[b,p] = length(ii)
       if(length(ii)>0){
         HTmnP[b,p] = mean(FD$HT[ii]/FD$Ncrct[ii])

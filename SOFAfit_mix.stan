@@ -2,12 +2,11 @@
 // This Stan code fits a model of foraging behavior to observational data 
 //  on sea otter foraging  [Refer to "SOFA_summary" for details] 
 //  
-// NOTE1: add back in NI and LM params (number items/dive and Lambda) 
-// NOTE2: this version does not incorporate sub-groups...
-// an alternate version will incorporate user-defined sub-groups
+// NOTE: this version does not incorporate sub-groups...
+// alternate version will incorporate user-defined sub-groups
 // (could be individual otters and/or temporal or spatial groupings)
-// by estimating separate eta/alpha vectors for each group, and by
-// making the relevant forage params hierarchical (psi1, phi1, muSZ)
+// by estimating separate eta/alpha simplex vectors for each group,
+// and making relevant forage params hierarchical (psi1, phi1, muSZ)
 // to allow for differences in group-specific HT, CR, & SZ values
 //   (and thus also the group-specific PD and ER values)
 //
@@ -38,53 +37,50 @@ data {
 // Section 2. The parameters to be estimated 
 parameters {
   simplex[Km1] eta ;             // mean proportional effort allocation by prey type (if all ID'd)
-  real<lower=0> tau ;            // relative precision of diet composition across bouts
+  // simplex [Km1] q ;               // mean proportional contribution of each prey type to Un-ID prey
+  // real<lower=0,upper=1> PUID ;   // mean TOTAL Proportion of effort on Un-ID prey  
+  vector<lower=0,upper=1>[Km1] Pid ;// prey-specific probability of positive ID
+  real<lower=0> tau ;            // relative precision of diet composition across bouts  
   simplex[K] theta[Nbouts] ;     // vectors of bout-specific prey-allocation probs for multinomial  
   vector[Km1] muSZ ;             // mean of log(Size_cm) of each prey
-  real<lower=0> muSZ_u ;         // mean of log(Size_cm) of UN-ID
+  //real<lower=0> muSZ_u ;         // mean of log(Size_cm) of UN-ID
   vector<lower=0>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey (incl. un-id)
   vector<lower=0>[Km1] sigHT ;   // stdev of log(HT per item) of each prey (incl. un-id)
   vector<lower=0>[Km1] sigCR ;   // stdev of log(HT per item) of each prey (incl. un-id)
-  real<lower=0> sigSZ_u ;        // stdev of log(Size_cm) of UN-ID
-  real<lower=0> sigHT_u ;        // stdev of log(HT per item) of UN-ID    
+  // real<lower=0> sigSZ_u ;        // stdev of log(Size_cm) of UN-ID
+  // real<lower=0> sigHT_u ;        // stdev of log(HT per item) of UN-ID    
   vector[Km1] phi1 ;             // intercept of log(mean cons rate) fxn by prey 
   vector[Km1] phi2 ;             // size effect on log(mean cons rate) fxn by prey 
   vector[Km1] psi1 ;             // intercept of log(HT) fxn by prey 
   vector[Km1] psi2 ;             // size effect on log(HT) fxn by prey   
-  real psi1_u ;                  // intercept of log(HT) fxn for UN-ID prey 
-  real psi2_u ;                  // size effect on log(HT) fxn for UN-ID prey     
-  real<lower=0,upper=1> maxPunid;// max prob un-id, if size/HT dist.s overlap 100% with UN-ID
+  // real psi1_u ;                  // intercept of log(HT) fxn for UN-ID prey 
+  // real psi2_u ;                  // size effect on log(HT) fxn for UN-ID prey     
+  // real<lower=0,upper=1> maxPunid;// max prob un-id if size/HT dist.s overlap 100% with UN-ID
   vector<lower=0>[Km1] Cal_dens; // Caloric density (kcal/g) by prey type
 }
 // Section 3. Derived (transformed) parameters
 transformed parameters {
-  vector<lower=0,upper=1>[Km1] Pid ; // prey-specific probability of positive ID
-  vector<lower=0>[K] alpha ;         // vector of dirichlet params: relative prey freq (inc. UN-ID)
-  real<lower=0> OV_SZ[Km1] ;    
-  real<lower=0> OV_HT[Km1] ;
-  real<lower=0> Dist_SZ[Km1] ;
-  real<lower=0> Dist_HT[Km1] ;   
-  vector[Km1] muHT ;                // mean of log(HT per item) of each prey  
-  real muHT_u ;                     // mean of log(HT per item) of UN-ID     
+  // vector<lower=0,upper=1>[Km1] q ;// prey-specific contribution to UN-ID prey
+  simplex[Km1] q ;               // mean proportional contribution of each prey type to Un-ID prey
+  // vector<lower=0,upper=1>[Km1] Pid ;// prey-specific probability of positive ID
+  // vector<lower=0>[Km1] alphaP ;     // vector of dirichlet params: relative prey freq (w/o UN-ID)
+  vector<lower=0>[K] alpha ;        // vector of dirichlet params: relative prey freq (inc. UN-ID)
+  // real<lower=0> OV_SZ[Km1] ;    
+  // real<lower=0> OV_HT[Km1] ;
+  // real<lower=0> Dist_SZ[Km1] ;
+  // real<lower=0> Dist_HT[Km1] ;   
+  // vector[Km1] muHT ;             // mean of log(HT per item) of each prey  
+  //real muHT_u ;         // mean of log(HT per item) of UN-ID     
   // Compute mean expected HT at the mean size of un-id prey:
-  muHT = psi1 + psi2 * muSZ_u ;
-  muHT_u = psi1_u + psi2_u * muSZ_u ;  
-  // Loop through prey types, calculate prob of ID-ing prey (Pid) & contribution to un-ID 
-  // NOTE: Bhattacharyya coefficient measures overlap between size/HT distributions of 
-  // each prey type and UN-ID prey: if NO overlap then prey does not contribute to un-ID,
-  // while if perfect overlap, then prob of Un-ID is at maximum (maxPunid)
-  for (j in 1:Km1){
-    Dist_SZ[j] = 0.25 * log(0.25 * (sigSZ[j]^2 / sigSZ_u^2 + sigSZ_u^2/sigSZ[j]^2 + 2))
-              + 0.25 * (((muSZ[j] - muSZ_u)^2) / (sigSZ[j]^2 + sigSZ_u^2)) ;
-    OV_SZ[j] = exp(-Dist_SZ[j]) ;
-    Dist_HT[j] = 0.25 * log(0.25 * (sigHT[j]^2 / sigHT_u^2 + sigHT_u^2/sigHT[j]^2 + 2))
-              + 0.25 * (((muHT[j] - muHT_u)^2) / (sigHT[j]^2 + sigHT_u^2)) ;
-    OV_HT[j] = exp(-Dist_HT[j]) ;    
-    Pid[j] = 1 - maxPunid * (OV_SZ[j] * OV_HT[j]) ;
-  }  
-  // Calculate alpha, the dirichlet params for bout-specific prey allocation probs
+  // muHT = psi1 + psi2 .* muSZ ;
+  //muHT_u = psi1_u + psi2_u * muSZ_u ;  
+  // Calculate alpha, the dirichlet params for bout-specific prey allocation probs  
+  // Pid = 1 - ( (q * PUID) ./ eta );
+  // alphaP = eta * (tau * Km1) ;
   alpha[1:Km1] = (eta * (tau * Km1)) .* Pid ;
   alpha[K] = sum((eta * (tau * Km1)) .* (1 - Pid)) ;
+  // Calculate proporitonal contribution to un-ID 
+  q = (eta .* (1 - Pid)) / sum(eta .* (1 - Pid)) ;
 }
 // Section 4. Estimating model parameters (drawing from probability distributions)
 model {
@@ -96,12 +92,28 @@ model {
   }
   // Observed consumption rate (g/min) by prey type, random samples
   CRate ~ lognormal(phi1[Cp] + phi2[Cp] .* Csz, sigCR[Cp]) ;
-  // Mean prey size (cm), random samples, ID prey & UN-id prey
+  // Mean prey size (cm), random samples, ID prey 
   SZmn ~ lognormal(muSZ[Sp],sigSZ[Sp]) ;
-  SZmnU ~ lognormal(muSZ_u,sigSZ_u) ;
-  // Handling time (sec), random samples, ID prey & UN-id prey
+  // Handling time (sec), random samples, ID prey
   HTmn ~ lognormal(psi1[Hp] + psi2[Hp] .* Hsz, sigHT[Hp]) ;
-  HTmnU ~ lognormal(psi1_u + psi2_u * Hsz_u, sigHT_u) ;
+  // Mean prey size (cm), random samples, UN-id prey
+  //SZmnU ~ lognormal(muSZ_u,sigSZ_u) ;
+  for (i in 1:NU[1]){
+    real lmix[Km1];
+    for(j in 1:Km1){
+      lmix[j] = log(q[j]) + normal_lpdf(SZmnU[i] | muSZ[j], sigSZ[j]) ; 
+    }
+    target += log_sum_exp(lmix);
+  }
+  // Handling time (sec), random samples, UN-id prey
+  //HTmnU ~ lognormal(psi1_u + psi2_u * Hsz_u[i], sigHT_u) ;
+  for (i in 1:NU[2]){
+    real lmix[Km1];
+    for(j in 1:Km1){
+      lmix[j] = log(q[j]) + normal_lpdf(HTmnU[i] |  psi1[j] + psi2[j] * Hsz_u[i], sigHT[j]) ; 
+    }
+    target += log_sum_exp(lmix);
+  }
   //
   // B) Prior distributions for model parameters:
   Cal_dens ~ normal(Cal_dns_mn,Cal_dns_sg) ; // Caloric deinsity (allows uncertainty)
@@ -112,16 +124,17 @@ model {
   phi2 ~ cauchy(0,2.5) ; // effect of size on log Cons rate
   psi1 ~ cauchy(0,2.5) ; // Intercept of log HT, by prey
   psi2 ~ cauchy(0,2.5) ; // effect of size on log HT rate
-  psi1_u ~ cauchy(0,2.5) ; // Intercept of log HT, UN-ID prey
-  psi2_u ~ cauchy(0,2.5) ; // effect of size on log HTm UN-ID prey
+  // psi1_u ~ cauchy(0,2.5) ; // Intercept of log HT, UN-ID prey
+  // psi2_u ~ cauchy(0,2.5) ; // effect of size on log HTm UN-ID prey
   muSZ ~ cauchy(1.5,2.5);// log-mean size by prey type
-  muSZ_u ~ cauchy(1.5,2.5);// log-mean size by prey type
-  maxPunid ~ beta(3,1);     // max prob un-ID, for prey overlapping UN-ID in size & HT
+  // muSZ_u ~ cauchy(1.5,2.5);// log-mean size by prey type
+  // PUID ~ beta(1,10);     // mean TOTAL proportion of effort that is Un-ID
+  Pid ~ beta(5,1);     // max prob un-ID, for prey overlapping UN-ID in size & HT
   sigSZ ~ cauchy(0,2.5); // variation in prey size across bouts, by prey type
   sigHT ~ cauchy(0,2.5); // variation in prey HT across bouts, by prey type
   sigCR ~ cauchy(0,2.5); // variation in prey HT across bouts, by prey type
-  sigSZ_u ~ cauchy(0,2.5); 
-  sigHT_u ~ cauchy(0,2.5); 
+  // sigSZ_u ~ cauchy(0,2.5); 
+  // sigHT_u ~ cauchy(0,2.5); 
 }
 // Section 5. Derived parameters and statistics 
 generated quantities {
