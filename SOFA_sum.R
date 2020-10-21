@@ -45,6 +45,7 @@ if(length(grep("Grp", rdata_file))>0){Grp_TF=TRUE}else{Grp_TF=FALSE}
 file.copy(resultsfilename,
 					paste0("./code/","Results.rdata"),overwrite = TRUE)
 #
+GL1 = 1; GL2 = 0; GL3 = 0
 if(Grp_TF){
 	attach("./code/Results.rdata"); Grouplist <- Grouplist; detach("file:./code/Results.rdata")
 	dlg_message(c("This results file has by-groups. You can select up to 3 sample group levels ",

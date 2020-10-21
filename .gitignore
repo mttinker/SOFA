@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-projects/
+projects/*
+!projects/.gitkeep 
 code/Results.rdata
 code/SOFA_summary.html

@@ -70,6 +70,9 @@ Sys.sleep(.5)
 # Prompt user for a name for the project:
 Projectname <- dlg_input("Enter a name for this project", "Edit_me")$res
 Sys.sleep(.5)
+#
+# Create projects directory if it does not exist
+dir.create(paste0("./projects"),showWarnings = F)
 # Create a folder with the project name specified,
 # and if it already exists, alert user and allow to abort or over-write
 dir.create(paste0("./projects/",Projectname),showWarnings = F)

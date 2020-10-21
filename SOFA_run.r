@@ -30,7 +30,7 @@ rspnse = dlg_message(c("This script is used to set up and run SOFA, fitting the 
 if(rspnse == "cancel"){
 	stop_quietly()
 }
-proj_list = dir('./projects')
+proj_list = dir('./projects') 
 Projectpath = dlg_dir('./projects/', "Select Project folder")$res
 Projectname = basename(Projectpath)
 Sys.sleep(.5)
