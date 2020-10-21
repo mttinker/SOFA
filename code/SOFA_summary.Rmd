@@ -8,7 +8,7 @@ params:
  GL3: 0
 title: "`r params$rep_title`"
 date: "`r params$rep_date`"
-author: "SOFA created for U.S. Geological Survey and Seatle Aquarium by M.T. Tinker, Nhydra Ecological"
+author: "SOFA created for U.S. Geological Survey and Seattle Aquarium by M.T. Tinker, Nhydra Ecological"
 output:
   html_document: 
     fig_width: 9
@@ -24,7 +24,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 existing_Packages<-as.list(installed.packages()[,1])
 # Add new packages you might need to this line, to check if they're installed and install missing packages
-required_Packages<-c("rstan","ggplot2", "gridExtra", "bayesplot", "dplyr", "htmlTable","gtools","knitr")
+required_Packages<-c("rstan","ggplot2", "gridExtra", "bayesplot", "dplyr", "gtools","knitr")
 missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages, repos = "http://cran.us.r-project.org")
 invisible(lapply(required_Packages, require, character.only=T,quietly = T))
