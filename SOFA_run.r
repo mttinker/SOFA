@@ -44,7 +44,7 @@ MnN2 = as.numeric(dlg_input(message = "Min dives/bout for estimating effort allo
 														default = 2)$res)
 nsamples = as.numeric(dlg_input(message = "Number posterior samples from Bayesian fitting", 
 														default = 10000)$res)
-nburnin = as.numeric(dlg_input(message = "Number of burn0in samples for Bayesian fitting", 
+nburnin = as.numeric(dlg_input(message = "Number of burn-in samples for Bayesian fitting", 
 														default = 750)$res)
 # Process data---------------------------------------------------------------
 # Load data (after selecting Projectname from available sub-folders of data folder)
@@ -109,24 +109,7 @@ if (SBST==1){
 }
 #
 source("./code/Fdatprocess.R")
-errtxt = c("An error occured in one or more of the data files, ",
-					 "check that all data fields are formatted followig the manual,",
-					 "and valid proxy species have been selected, then try again.")
-wrntxt = c("Some mass-length functions are poor due to limited data")
-test = tryCatch({
-	rslt <- Fdatprocess(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,dfE,dfElst)
-}, warning = function(war) {
-	dlg_message(wrntxt)
-	print("Review diagnistic warnings and adjust options as needed.")
-	print(paste("Fdatprocess warnings: ",war))
-#   stop_quietly()
-}, error = function(err) {
-	dlg_message(errtxt)
-	stop_quietly()
-}, finally = {
-	print("Fdatprocess succesful")
-}) # END try-catch loop
-rm(test)
+rslt = Fdatprocess(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,dfE,dfElst)
 Fdat = rslt$Fdat; Boutlist=rslt$Boutlist
 Cal_dns_mn = rslt$Cal_dns_mn; Cal_dns_sg = rslt$Cal_dns_sg
 logMass_sg = rslt$logMass_sg
@@ -198,16 +181,16 @@ Niter = round(nsamples/ncore)+nburnin
 #
 if(GrpOpt==0){
 	params <- c("tauB","maxPunid","CRmn","ERmn","muSZ","muSZ_u",
-							"SZ","SZ_u","HT","HT_u","CR","ER","eta","PD","Pid",
+							"SZ","SZ_u","HT","HT_u","CR","ER","eta","PI","Omega",
 							"phi1","phi2","psi1","psi2","psi1_u","psi2_u",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u") #
 }else{
 	params <- c("tauB","tauG","maxPunid","CRmn","ERmn","muSZ","muSZ_u",
-							"SZ","SZ_u","HT","HT_u","CR","ER","eta","PD","Pid",
+							"SZ","SZ_u","HT","HT_u","CR","ER","eta","PI","Omega",
 							"phi1","phi2","psi1","psi2","psi1_u","psi2_u",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u",
-							"CRgmn","ERgmn","SZg","SZg_u","HTg","CRg","ERg","PDg",
-							"PidG","muSZG","muSZG_u","phi1G","psi1G","psi1G_u","etaG",
+							"CRgmn","ERgmn","SZg","SZg_u","HTg","CRg","ERg","PIg",
+							"OmegaG","muSZG","muSZG_u","phi1G","psi1G","psi1G_u","etaG",
 							"sg1","sg2","sg3","sg4","sg5") #
 }
 #

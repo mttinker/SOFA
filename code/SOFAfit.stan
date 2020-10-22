@@ -40,9 +40,9 @@ parameters {
   simplex[K] theta[Nbouts] ;     // vectors of bout-specific prey-allocation probs for multinomial  
   vector<lower=0>[Km1] muSZ ;    // mean of log(Size_cm) of each prey
   real<lower=0> muSZ_u ;         // mean of log(Size_cm) of UN-ID
-  vector<lower=0>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey (incl. un-id)
-  vector<lower=0>[Km1] sigHT ;   // stdev of log(HT per item) of each prey (incl. un-id)
-  vector<lower=0>[Km1] sigCR ;   // stdev of log(HT per item) of each prey (incl. un-id)
+  vector<lower=0>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey 
+  vector<lower=0>[Km1] sigHT ;   // stdev of log(HT per item) of each prey 
+  vector<lower=0>[Km1] sigCR ;   // stdev of log(HT per item) of each prey 
   real<lower=0> sigSZ_u ;        // stdev of log(Size_cm) of UN-ID
   real<lower=0> sigHT_u ;        // stdev of log(HT per item) of UN-ID    
   vector<lower=0>[Km1] phi1 ;    // intercept of CRate v Size fxn by prey 
@@ -57,7 +57,7 @@ parameters {
 }
 // Section 3. Derived (transformed) parameters
 transformed parameters {
-  vector<lower=0,upper=1>[Km1] Pid ;// prey-specific probability of positive ID
+  vector<lower=0,upper=1>[Km1] Omega ;// prey-specific probability of positive ID
   vector<lower=0>[K] alpha ;        // vector of dirichlet params: relative prey freq (inc. UN-ID)
   real<lower=0> OV_SZ[Km1] ;        // Overlap of size distribution with unknown prey, by prey type
   real<lower=0> OV_HT[Km1] ;        // Overlap of HT distribution with unknown prey, by prey type
@@ -85,11 +85,11 @@ transformed parameters {
     Dist_HT[j] = 0.25 * log(0.25 * (sigHT[j]^2 / sigHT_u^2 + sigHT_u^2/sigHT[j]^2 + 2))
               + 0.25 * (((muHT[j] - muHT_u)^2) / (sigHT[j]^2 + sigHT_u^2)) ;
     OV_HT[j] = exp(-Dist_HT[j]) ;    
-    Pid[j] = 1 - maxPunid * (OV_SZ[j] * OV_HT[j]) ;
+    Omega[j] = 1 - maxPunid * (OV_SZ[j] * OV_HT[j]) ;
   }  
   // Calculate alpha, the dirichlet params for bout-specific prey allocation probs
-  alpha[1:Km1] = eta .* Pid ;
-  alpha[K] = sum(eta .* (1 - Pid)) ;
+  alpha[1:Km1] = eta .* Omega ;
+  alpha[K] = sum(eta .* (1 - Omega)) ;
   // Expected log attributes, given that the log median of means of lognormal samples of size n: 
   //           mu + (n*sg^2 - sg^2)/(2*n) 
   CRate_E = (phi1[Cp] + phi2[Cp] .* Csz) + ((Css .* square(sigCR[Cp])) - square(sigCR[Cp])) ./ (2 * Css) ;
@@ -145,7 +145,7 @@ generated quantities {
   real HT_u ;
   // vector[Km1] LM ;
   vector[Km1] CR ;
-  vector[Km1] PD ;
+  vector[Km1] PI ;
   vector[Km1] ER ;
   real CRmn ;
   real ERmn ;
@@ -165,7 +165,7 @@ generated quantities {
   // Mean Energy intake rate (ER) by prey, incl. uncertainty in Caloric density
   ER = Cal_dens .* CR ;
   // Proportional contribution (biomass consumed) of each prey type to diet: 
-  PD = (eta .* CR) / sum(eta .* CR) ;
+  PI = (eta .* CR) / sum(eta .* CR) ;
   // Overall mean consumption rate (CRmn) given effort allocation to each prey: 
   CRmn = sum(eta .* CR) ;
   // Overall mean Energy Intake Rate (ERmn, kcal.min) given effort allocation: 

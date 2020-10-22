@@ -51,9 +51,9 @@ parameters {
   vector<lower=0>[Km1] muSZG[Ngrp] ;  // mean of log(Size_cm) of each prey type, by group 
   real<lower=0> muSZ_u ;         // mean of log(Size_cm) of UN-ID
   real<lower=0> muSZG_u[Ngrp] ;         // mean of log(Size_cm) of UN-ID, by group
-  vector<lower=0>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey (incl. un-id)
-  vector<lower=0>[Km1] sigHT ;   // stdev of log(HT per item) of each prey (incl. un-id)
-  vector<lower=0>[Km1] sigCR ;   // stdev of log(HT per item) of each prey (incl. un-id)
+  vector<lower=0>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey 
+  vector<lower=0>[Km1] sigHT ;   // stdev of log(HT per item) of each prey 
+  vector<lower=0>[Km1] sigCR ;   // stdev of log(HT per item) of each prey 
   real<lower=0> sigSZ_u ;        // stdev of log(Size_cm) of UN-ID
   real<lower=0> sigHT_u ;        // stdev of log(HT per item) of UN-ID    
   vector<lower=0>[Km1] phi1 ;    // intercept of CRate v Size fxn by prey 
@@ -76,7 +76,7 @@ parameters {
 }
 // Section 3. Derived (transformed) parameters
 transformed parameters {
-  vector<lower=0,upper=1>[Km1] PidG[Ngrp] ;// prey-specific probability of positive ID
+  vector<lower=0,upper=1>[Km1] OmegaG[Ngrp] ;// prey-specific probability of positive ID
   vector<lower=0>[K] alpha[Ngrp] ;        // vector of dirichlet params: relative prey freq (inc. UN-ID)
   vector[NCR] CRate_E;              // Array of expected log prey-specific consumption rates (CR) by bout (g/min)
   vector[NHt] HTmn_E;               // Array of expected log mean handling times (sec), by prey, by bout   
@@ -106,11 +106,11 @@ transformed parameters {
       Dist_HT = 0.25 * log(0.25 * (sigHT[j]^2 / sigHT_u^2 + sigHT_u^2/sigHT[j]^2 + 2))
         + 0.25 * (((muHT[j] - muHT_u)^2) / (sigHT[j]^2 + sigHT_u^2)) ;
       OV_HT = exp(-Dist_HT) ;    
-      PidG[g][j] = 1 - maxPunid * (OV_SZ * OV_HT) ;
+      OmegaG[g][j] = 1 - maxPunid * (OV_SZ * OV_HT) ;
     } 
     // Calculate alpha, the dirichlet params for bout-specific prey allocation probs
-    alpha[g][1:Km1] = etaG[g] .* PidG[g] ;
-    alpha[g][K] = sum(etaG[g] .* (1 - PidG[g])) ;
+    alpha[g][1:Km1] = etaG[g] .* OmegaG[g] ;
+    alpha[g][K] = sum(etaG[g] .* (1 - OmegaG[g])) ;
   }
   // Expected log attributes, given that the log median of means of lognormal samples of size n: 
   //           mu + (n*sg^2 - sg^2)/(2*n) 
@@ -182,7 +182,7 @@ model {
 }
 // Section 5. Derived parameters and statistics 
 generated quantities {
-  vector<lower=0,upper=1>[Km1] Pid ;
+  vector<lower=0,upper=1>[Km1] Omega ;
   vector[Km1] SZ ;
   vector[Km1] SZg[Ngrp] ;
   real SZ_u ;
@@ -195,8 +195,8 @@ generated quantities {
   // vector[Km1] LM ;
   vector[Km1] CR ;
   vector[Km1] CRg[Ngrp] ;
-  vector[Km1] PD ;
-  vector[Km1] PDg[Ngrp] ;
+  vector[Km1] PI ;
+  vector[Km1] PIg[Ngrp] ;
   vector[Km1] ER ;
   vector[Km1] ERg[Ngrp] ;
   real CRmn ;
@@ -217,9 +217,9 @@ generated quantities {
     CR[j] = fmin(100, exp(phi1[j] + phi2[j] * (2.5*log(SZ[j])-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
     // Mean HT/itm, by prey type, adjusted for mean prey size and lognormal dist
     HT[j] = fmin(900, exp(psi1[j] + psi2[j] * (2.5*log(SZ[j])-7) + square(sigHT[j])/2)) ;
-    Pid[j] = 0 ;
+    Omega[j] = 0 ;
     for(g in 1:Ngrp){
-      Pid[j] = Pid[j] + ((1.0 / Ngrp) * PidG[g][j]) ;
+      Omega[j] = Omega[j] + ((1.0 / Ngrp) * OmegaG[g][j]) ;
       CRg[g][j] = fmin(100, exp(phi1G[g][j] + phi2[j] * (2.5*log(SZg[g][j])-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
       HTg[g][j] = fmin(900, exp(psi1G[g][j] + psi2[j] * (2.5*log(SZg[g][j])-7) + square(sigHT[j])/2)) ;
     }
@@ -229,7 +229,7 @@ generated quantities {
   // Mean Energy intake rate (ER) by prey, incl. uncertainty in Caloric density
   ER = Cal_dens .* CR ;
   // Proportional contribution (biomass consumed) of each prey type to diet: 
-  PD = (eta .* CR) / sum(eta .* CR) ;
+  PI = (eta .* CR) / sum(eta .* CR) ;
   // Overall mean consumption rate (CRmn) given effort allocation to each prey: 
   CRmn = sum(eta .* CR) ;
   // Overall mean Energy Intake Rate (ERmn, kcal.min) given effort allocation: 
@@ -238,7 +238,7 @@ generated quantities {
   for(g in 1:Ngrp){
     HTg_u[g] = exp(psi1G_u[g] + psi2_u * (2.5*log(SZg_u[g])-7) + square(sigHT_u)/2);
     ERg[g] = Cal_dens .* CRg[g] ;
-    PDg[g] = (etaG[g] .* CRg[g]) / sum(etaG[g] .* CRg[g]) ;
+    PIg[g] = (etaG[g] .* CRg[g]) / sum(etaG[g] .* CRg[g]) ;
     CRgmn[g] = sum(etaG[g] .* CRg[g]) ;
     ERgmn[g] = sum(etaG[g] .* CRg[g] .* Cal_dens) ;
   }

@@ -25,7 +25,7 @@ stop_quietly <- function() {
 }
 rspnse = dlg_message(c("This script is used to generate an html report that summarizes results of  ",
 											 "the analysis of sea otter foraging data using SOFA (Sea Otter Foraging Analysis). ",
-											 "You begin by selecting a Projec name and results file. ",
+											 "You begin by selecting a Project name and results file. ",
 											 "Continue?"), "okcancel")$res
 if(rspnse == "cancel"){
 	stop_quietly()
@@ -39,6 +39,10 @@ rslt_list = dir(paste0(Projectpath,"/results"))
 rdata_file = rselect.list(rslt_list, preselect = NULL, multiple = FALSE,
 										title = "Select results file" ,
 										graphics = getOption("menu.graphics")) 
+if(length(rdata_file)==0){
+	dlg_message(c("No data file selected"), "ok")
+	stop_quietly()
+}
 resultsfilename = paste0("./projects/",Projectname,"/results/",rdata_file)
 if(length(grep("Grp", rdata_file))>0){Grp_TF=TRUE}else{Grp_TF=FALSE}
 file.copy(resultsfilename,
@@ -65,7 +69,7 @@ if(rspnse == "cancel"){
 	stop_quietly()
 }
 vers = read.csv("./code/Version.csv"); vers = vers$Version
-title = paste0("Sea otter foraging analysis (SOFA) ",vers," : ", Projectname)
+title = paste0("~~~ Sea otter foraging analysis (SOFA) ",vers," ~~~ ", "Project: ", Projectname)
 Daterun = Sys.Date()
 render("./code/SOFA_summary.Rmd",
 			 output_dir = paste0("./projects/",Projectname),
