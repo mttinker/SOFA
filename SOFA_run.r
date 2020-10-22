@@ -106,20 +106,29 @@ if (SBST==1){
 }
 #
 source("./code/Fdatprocess.R")
-rslt = Fdatprocess(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,dfE,dfElst)
+rslt = try(suppressWarnings ( Fdatprocess(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,dfE,dfElst)))
+if(!is.list(rslt)){
+	errtxt = dlg_message(c("An error occured in data processing. This is likely due to a ",
+												"formatting error in either the raw data or Prey_Key spreadsheet.",
+												"Go nacl and re-check both, following instructions in manual"), "ok")$res
+	stop_quietly()
+}
 Fdat = rslt$Fdat; Boutlist=rslt$Boutlist
 Cal_dns_mn = rslt$Cal_dns_mn; Cal_dns_sg = rslt$Cal_dns_sg
 logMass_sg = rslt$logMass_sg
 Nbouts = rslt$Nbouts; Ndives = rslt$Ndives; Nobs = rslt$Nobs; NPtypes = rslt$NPtypes
 MassLngFits = rslt$MassLngFits
 rm(rslt)
-# Generate mass-lenth plots by prey code
-for(pr in 1:nrow(dfPr)){
-	if(dfPr$PreyType[pr] != "UNID"){
-		ft = MassLngFits[[pr]]
-		plot(exp(ft$model$x),exp(ft$model$y),main=dfPr$Description[pr],
-				 xlab="size (mm)",ylab="mass (g)")
-		lines(exp(ft$prdct$x),exp(ft$prdct$ypred),col="red")
+rspns = dlg_message(c("Do you wish to review plots of mass-length data fits (can take some time)"), "yesno")$res
+if (rspns=="yes"){
+	# Generate mass-length plots by prey code
+	for(pr in 1:nrow(dfPr)){
+		if(dfPr$PreyType[pr] != "UNID"){
+			ft = MassLngFits[[pr]]
+			plot(exp(ft$model$x),exp(ft$model$y),main=dfPr$Description[pr],
+					 xlab="size (mm)",ylab="mass (g)")
+			lines(exp(ft$prdct$x),exp(ft$prdct$ypred),col="red")
+		}
 	}
 }
 #  Allow user to set by-groups for analysis based on grouping variables
@@ -166,7 +175,14 @@ if(GrpOpt==0){
 #
 # Analyze bouts to get bout-specific stats
 source("./code/Boutprocess.R")
-stan.data <- Boutprocess(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp)
+stan.data = try(suppressWarnings ( Boutprocess(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp)))
+if(!is.list(stan.data)){
+	errtxt = dlg_message(c("An error occured in processing bout statistics. This is likely due to a ",
+												 "formatting error in the raw data, prey types with too few observations,",
+												 "or group levels with too few data records. Go back and re-check data ",
+												 "and Prey_Key set-up, following instructions in manual"), "ok")$res
+	stop_quietly()
+}
 #
 # Fit Bayesian model ------------------------------------------------------
 #
@@ -208,14 +224,17 @@ if(file_test("-f", testfile) ==TRUE){
 }
 #
 rspnse = dlg_message(c("That completes set-up, the model will now be fit using ",
-											 "Bayesian methods (STAN). Fitting can take several hours, ",
+											 "Bayesian methods (rstan). Fitting can take several hours, ",
 											 "depending on size of the data file and speed of the computer. ",
+											 "NOTE: if an error occurs it is likely because rstan or rtools are ",
+											 "not installed properly, keep track of error codes for debugging.",
 											 "Continue?"), "okcancel")$res
 if(rspnse == "cancel"){
 	stop_quietly()
 }
 #
-out <- sampling(Stan_model.dso,
+suppressWarnings ( 
+	out <- sampling(Stan_model.dso,
 									data = stan.data,    # named list of data
 									pars = params,       # list of params to monitor
 									init = "random",     # initial values     "random", 
@@ -225,7 +244,8 @@ out <- sampling(Stan_model.dso,
 									cores = ncore,          # number of cores (if <20, increase iter)
 									refresh = 50        # show progress every 'refresh' iterations
 									#               control = list(adapt_delta = 0.99, max_treedepth = 15)
-)
+	)
+) 
 mcmc <- as.matrix(out)
 vn = colnames(mcmc)
 Nsims = nrow(mcmc)
