@@ -63,12 +63,7 @@ if(length(!is.na(dfPr$PreyType))<length(!is.na(dfPr$PreyCode))){
 								"please go back and edit. Stopping program."))
 	stop_quietly()
 }
-#  Allow user to select a subset of data for analysis based on values of a group variable
-rspns = dlg_message(c("You can either analyze ALL the data, or just a sub-set of records ",
-											 "based on the values of one of the categorical variables. ",
-											 "Note that if ALL, you will have the option of setting by-groups, ",
-											 "while if you wish to analyze just a sub-set of records ", 
-											 "then by-groups will not be an option"), "ok")$res
+#  Create vector of selection variables for data sub-setting or grouping 
 slctvars = c("Area", "Site", "Period", "Sex", "Ageclass", "Ottername", "Pup")
 # Note: determine which of these potential selection variables has enough levels
 ix = numeric()
@@ -81,10 +76,12 @@ for (i in 1:length(slctvars)){
 }
 slctvars = slctvars[-ix]
 #
-rspns = dlg_message(c("Do you wish to analyze just a sub-set of the data", 
-											"(if 'yes', you will next be asked to select data ", 
-											"based on values of a group variable)?"), "yesno")$res
-if (rspns=="no"){
+rspns = dlg_message(c("Do you wish to analyze the full data set? If you answer 'no', ", 
+											"it is assumed you wish to analyze just a sub-set of the data,",
+											"in which case you will next be asked to select a sub-set of data ", 
+											"based on values of one of the data variables (Area, Period, etc.))",
+											"Analyze full data set?"), "yesno")$res
+if (rspns=="yes"){
 	SBST = 0
 }else{
 	SBST = 1
@@ -127,8 +124,8 @@ for(pr in 1:nrow(dfPr)){
 }
 #  Allow user to set by-groups for analysis based on grouping variables
 if (SBST == 0){
-	rspns = dlg_message(c("You have the option of setting 'by-groups' for analysis, ",
-												"where-by one or more categorical variables are used to ", 
+	rspns = dlg_message(c("You also have the option of setting 'by-groups' for analysis: ",
+												"this means that one or more categorical variables are used to ", 
 												"divide the data into groups, and stats will be generated ",
 												"for each group level."), "ok")$res
 	rspns = dlg_message(c("Do you wish to analayze data by group, with the by-group",
@@ -218,11 +215,7 @@ if(rspnse == "cancel"){
 	stop_quietly()
 }
 #
-errtxt = c("An error occured in in model fitting. Check to make sure STAN",
-					 "and other libraries are properly installed, check stan_data for NA ",
-					 "values or other errors, and then re-start R and try again.")
-test = tryCatch({
-	out <- sampling(Stan_model.dso,
+out <- sampling(Stan_model.dso,
 									data = stan.data,    # named list of data
 									pars = params,       # list of params to monitor
 									init = "random",     # initial values     "random", 
@@ -232,19 +225,7 @@ test = tryCatch({
 									cores = ncore,          # number of cores (if <20, increase iter)
 									refresh = 50        # show progress every 'refresh' iterations
 									#               control = list(adapt_delta = 0.99, max_treedepth = 15)
-	)
-	#
-}, error = function(err) {
-	dlg_message(errtxt)
-	stop_quietly()
-}, warning = function(war) {
-	print("Review diagnistic warnings from fitting and adjust options as needed.")
-	print(paste("STAN WARNINGS:  ",war))
-	#   stop_quietly()
-}, finally = {
-	print("Fitting Succesful")
-}) # END try-catch loop
-rm(test)
+)
 mcmc <- as.matrix(out)
 vn = colnames(mcmc)
 Nsims = nrow(mcmc)
