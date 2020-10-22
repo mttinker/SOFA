@@ -195,8 +195,8 @@ generated quantities {
   // vector[Km1] LM ;
   vector[Km1] CR ;
   vector[Km1] CRg[Ngrp] ;
-  vector[Km1] PI ;
-  vector[Km1] PIg[Ngrp] ;
+  vector[Km1] Pi ;
+  vector[Km1] PiG[Ngrp] ;
   vector[Km1] ER ;
   vector[Km1] ERg[Ngrp] ;
   real CRmn ;
@@ -229,7 +229,7 @@ generated quantities {
   // Mean Energy intake rate (ER) by prey, incl. uncertainty in Caloric density
   ER = Cal_dens .* CR ;
   // Proportional contribution (biomass consumed) of each prey type to diet: 
-  PI = (eta .* CR) / sum(eta .* CR) ;
+  Pi = (eta .* CR) / sum(eta .* CR) ;
   // Overall mean consumption rate (CRmn) given effort allocation to each prey: 
   CRmn = sum(eta .* CR) ;
   // Overall mean Energy Intake Rate (ERmn, kcal.min) given effort allocation: 
@@ -238,7 +238,7 @@ generated quantities {
   for(g in 1:Ngrp){
     HTg_u[g] = exp(psi1G_u[g] + psi2_u * (2.5*log(SZg_u[g])-7) + square(sigHT_u)/2);
     ERg[g] = Cal_dens .* CRg[g] ;
-    PIg[g] = (etaG[g] .* CRg[g]) / sum(etaG[g] .* CRg[g]) ;
+    PiG[g] = (etaG[g] .* CRg[g]) / sum(etaG[g] .* CRg[g]) ;
     CRgmn[g] = sum(etaG[g] .* CRg[g]) ;
     ERgmn[g] = sum(etaG[g] .* CRg[g] .* Cal_dens) ;
   }

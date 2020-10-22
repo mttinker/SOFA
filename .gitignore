@@ -6,3 +6,7 @@ projects/*
 !projects/.gitkeep 
 code/Results.rdata
 code/SOFA_summary.html
+code/SOFAfit_Grp_dso.rdata
+code/SOFAfit_dso.rdata
+code/SOFAfit.rds
+code/SOFAfit_Grp.rds

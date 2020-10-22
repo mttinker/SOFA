@@ -178,15 +178,15 @@ Niter = round(nsamples/ncore)+nburnin
 #
 if(GrpOpt==0){
 	params <- c("tauB","maxPunid","CRmn","ERmn","muSZ","muSZ_u",
-							"SZ","SZ_u","HT","HT_u","CR","ER","eta","PI","Omega",
+							"SZ","SZ_u","HT","HT_u","CR","ER","eta","Pi","Omega",
 							"phi1","phi2","psi1","psi2","psi1_u","psi2_u",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u") #
 }else{
 	params <- c("tauB","tauG","maxPunid","CRmn","ERmn","muSZ","muSZ_u",
-							"SZ","SZ_u","HT","HT_u","CR","ER","eta","PI","Omega",
+							"SZ","SZ_u","HT","HT_u","CR","ER","eta","Pi","Omega",
 							"phi1","phi2","psi1","psi2","psi1_u","psi2_u",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u",
-							"CRgmn","ERgmn","SZg","SZg_u","HTg","CRg","ERg","PIg",
+							"CRgmn","ERgmn","SZg","SZg_u","HTg","CRg","ERg","PiG",
 							"OmegaG","muSZG","muSZG_u","phi1G","psi1G","psi1G_u","etaG",
 							"sg1","sg2","sg3","sg4","sg5") #
 }

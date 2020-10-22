@@ -145,7 +145,7 @@ generated quantities {
   real HT_u ;
   // vector[Km1] LM ;
   vector[Km1] CR ;
-  vector[Km1] PI ;
+  vector[Km1] Pi ;
   vector[Km1] ER ;
   real CRmn ;
   real ERmn ;
@@ -165,7 +165,7 @@ generated quantities {
   // Mean Energy intake rate (ER) by prey, incl. uncertainty in Caloric density
   ER = Cal_dens .* CR ;
   // Proportional contribution (biomass consumed) of each prey type to diet: 
-  PI = (eta .* CR) / sum(eta .* CR) ;
+  Pi = (eta .* CR) / sum(eta .* CR) ;
   // Overall mean consumption rate (CRmn) given effort allocation to each prey: 
   CRmn = sum(eta .* CR) ;
   // Overall mean Energy Intake Rate (ERmn, kcal.min) given effort allocation: 
