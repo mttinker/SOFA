@@ -16,6 +16,7 @@ require(gridExtra)
 require(bayesplot)
 require(rmarkdown)
 require(gtools)
+require(dplyr)
 require(knitr)
 # Create Generic function for stopping script in case of error:
 stop_quietly <- function() {
@@ -61,6 +62,7 @@ if(Grp_TF){
 	GL1 = which(Grouplist$Groupname==Grplevsamp[1])
 	if(length(Grplevsamp)>1){GL2 = which(Grouplist$Groupname==Grplevsamp[2])}else{GL2=0}
 	if(length(Grplevsamp)>2){GL3 = which(Grouplist$Groupname==Grplevsamp[3])}else{GL3=0}
+	rm(Grplevsamp)
 }
 rspnse = dlg_message(c("About to render an html rmarkdown report summarizing model results, ",
 											 "which could take a few minutes to complete. ",

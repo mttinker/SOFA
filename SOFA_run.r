@@ -193,18 +193,20 @@ ncore = min(20,cores-1)
 Niter = round(nsamples/ncore)+nburnin
 #
 if(GrpOpt==0){
-	params <- c("tauB","maxPunid","CRmn","ERmn","muSZ","muSZ_u",
-							"SZ","SZ_u","HT","HT_u","CR","ER","eta","Pi","Omega",
-							"phi1","phi2","psi1","psi2","psi1_u","psi2_u",
-							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u") #
+	params <- c("tauB","maxPunid","CRmn","ERmn","SZ","SZ_u",
+							"HT","HT_u","CR","ER","eta","Pi","Omega",
+							"phi1","phi2","psi1","psi2",
+							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u") 
+							# "muSZ","muSZ_u","psi1_u","psi2_u",
 }else{
-	params <- c("tauB","tauG","maxPunid","CRmn","ERmn","muSZ","muSZ_u",
-							"SZ","SZ_u","HT","HT_u","CR","ER","eta","Pi","Omega",
-							"phi1","phi2","psi1","psi2","psi1_u","psi2_u",
+	params <- c("tauB","tauG","maxPunid","CRmn","ERmn","SZ",
+							"SZ_u","HT","HT_u","CR","ER","eta","Pi",
+							"Omega","phi1","phi2","psi1","psi2",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u",
-							"CRgmn","ERgmn","SZg","SZg_u","HTg","CRg","ERg","PiG",
-							"OmegaG","muSZG","muSZG_u","phi1G","psi1G","psi1G_u","etaG",
-							"sg1","sg2","sg3","sg4","sg5") #
+							"CRgmn","ERgmn","SZg","SZg_u","HTg","CRg","ERg",
+							"etaG","PiG","OmegaG","phi1G","psi1G",
+							"sg1","sg2","sg3","sg4","sg5") 
+							# "muSZ","muSZ_u","muSZG","muSZG_u","psi1_u","psi2_u","psi1G_u",
 }
 #
 # Stan model to fit:

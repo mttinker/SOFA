@@ -35,7 +35,8 @@ load(file="Results.rdata")
 # Set T/F key for Group option, use to determine whether to evaluate certain chunks
 #  using ```{r, eval=Grp_TF} 
 Grp_TF = GrpOpt==1
-r_mcmc = sample(Nsims,min(2500,Nsims),replace = F)
+Nsamp = min(2500,Nsims)
+r_mcmc = sample(Nsims,Nsamp,replace = F)
 post = mcmc[r_mcmc,]
 
 ```
@@ -189,6 +190,51 @@ mcmc_areas(post,area_method = c("equal height"),
   scale_y_discrete(name="Diet Type",labels=dfPtp$Description) +
   ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) 
 ))
+
+```
+
+```{r preyclass_calcs, echo=FALSE, include=FALSE}
+Pclass = unique(dfPtp$Class[!is.na(dfPtp$Class)])
+Nclasses = length(Pclass)
+Pclass_stats = merge(dfPcl,data.frame(Prey_Class = Pclass),by.x = "Prey Class",by.y = "Prey_Class")
+Pclass_stats = Pclass_stats[order(Pclass_stats$ClassN),]; colnames(Pclass_stats)[1] <- "Prey_Class"
+Pclass_pi = numeric(length = Nclasses*Nsamp)
+for( i in 1:Nclasses)	{
+	cl = Pclass_stats$Prey_Class[i]
+	ii = which(dfPtp$Class==cl)
+	for(j in 1:length(ii)){
+		prtp_n = dfPtp$TypeN[ii[j]]
+		iiv = which(vn == paste0("Pi[",prtp_n,"]"))
+		if(j==1){
+			tmp = as.matrix(post[,iiv])
+		}else{
+			tmp = cbind(tmp,post[,iiv])
+		}
+	}
+	Pclass_pi[((i-1)*Nsamp+1):((i-1)*Nsamp+Nsamp)] = apply(tmp,1,mean)
+}
+df_Pclass = data.frame(Prey_Class = rep(Pclass_stats$Prey_Class,each = Nsamp),
+											 Pi = Pclass_pi)
+df_Pclass$Prey_Class = factor(df_Pclass$Prey_Class,levels = Pclass_stats$Prey_Class)
+
+stats = df_Pclass %>% group_by(Prey_Class) %>% 
+	summarise(Pi_mean = mean(Pi), Pi_sd = sd(Pi),
+						Pi_lo = quantile(Pi,0.025),Pi_hi = quantile(Pi,0.975))
+Pclass_stats = merge(Pclass_stats,stats); 
+Pclass_stats = Pclass_stats[order(Pclass_stats$ClassN),]
+
+```
+
+```{r Fig2b, echo=FALSE, warning=FALSE, fig.cap = "Figure 2b. Boxplot showing posterior distributions for diet composition by Prey Class"}
+
+plot_title = "Proportional contribution to diet (by consumed biomass) by Prey Class"
+plt_Cl_pi = ggplot(df_Pclass,aes(x=Prey_Class,y=Pi)) +
+		geom_boxplot(fill="grey") +
+		scale_x_discrete(name="Prey Class",labels=rev(Pclass_stats$Description),
+										 limits = rev(levels(df_Pclass$Prey_Class))) +
+		ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) + 
+	  coord_flip() + theme_classic()
+print(plt_Cl_pi)	
 
 ```
 
@@ -435,6 +481,15 @@ paramstats = data.frame(Parameter = c(paste0("pi_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
       caption = "Table 13. Estimates for $\\pi$~*j*~, proportion of diet (consumed biomass) consisting of prey type j, for the overall data set")
+
+```
+
+```{r Table13b, echo=FALSE}
+
+ii = c(which(startsWith(vns,"Pi[")))
+
+kable(Pclass_stats[,-2], row.names = FALSE,
+      caption = "Table 13b. Estimates for proportion of diet (consumed biomass) by prey Class (standardized definitions), for the overall data set")
 
 ```
 
