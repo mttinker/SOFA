@@ -102,8 +102,8 @@ if(length(id)>0){
     Boutlist$Ndv[ip] =  Boutlist$Ndv[ip] + Boutlist$Ndv[ii]
     Boutlist$NdvSucc[ip] =  Boutlist$NdvSucc[ip] + Boutlist$NdvSucc[ii]
   }
+  Boutlist = Boutlist[-id,]
 }
-Boutlist = Boutlist[-id,]
 # Create Sz_cm field, accounting for prey sizeclass and Qualifier and paw Size
 # 1. Sizequal field for Size class
 Sizequal = paste0( as.character(dat$Size),
