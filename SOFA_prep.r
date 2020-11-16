@@ -77,6 +77,10 @@ dir.create(paste0("./projects"),showWarnings = F)
 # and if it already exists, alert user and allow to abort or over-write
 dir.create(paste0("./projects/",Projectname),showWarnings = F)
 files = dir(paste0("./projects/",Projectname,"/"))
+del = which(files=="oldfiles")
+if(length(del)>0){
+	files = files[-del]
+}
 if(length(files)>0){
 	rspnse = dlg_message(c("There are already some files in a folder with this project name. ",
 												 "Do you wish to over-write them with new data?  If you select 'OK', ",
