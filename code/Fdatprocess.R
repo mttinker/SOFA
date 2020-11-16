@@ -5,12 +5,50 @@ require(stats)
 require(MASS)
 require(gtools)
 Reg = dat$Region[1]
-# Drop dives with unknown or other Success, create sequential dive numbers 
+# account for prey codes that are "non-prey" such as rock or shell...
+ii = which(is.na(dfPr$PreyType))
+if(length(ii)>0){
+  for(i in 1:length(ii)){
+    iii = ii[i]
+    ix = which(dat$Prey==dfPr$PreyCode[iii])
+    if(length(ix)>0){
+      for(j in 1:length(ix)){
+        iz = ix[j]
+        dnii = dat$Divenum[iz]
+        btii = dat$Bout[iz]
+        sbii = dat$Subbout[iz]
+        ndii = which(dat$Bout==btii & dat$Subbout==sbii & dat$Divenum==dnii)
+        if(length(ndii)==1){
+          dat$Success[iz] = "n"
+          dat$Prey[iz] = NA
+          dat$N_items[iz] = NA
+          dat$Size[iz] = NA
+          dat$Qualifier[iz] = NA
+          dat$HT[iz] = NA
+          dat$Prop_lost[iz] = NA
+        }else{
+          dat = dat[-iz,]
+        }
+      }
+    }
+  }
+}
+# Remove dives with unknown or other Success codes, create sequential dive numbers 
 ix = which(dat$Success!="y" & dat$Success!="n" & dat$Success!="c")
 dat = dat[-ix,]
 dat$SuccessV = numeric(length = nrow(dat))
 dat$SuccessV[which(dat$Success=="y")] = 1
 dat$SuccessV[which(dat$Success=="c")] = 0.5
+# Clean-up Sex and Ageclass fields as necessary
+ii = which(dat$Sex!="f" & dat$Sex!="m" & dat$Sex!="u")
+dat$Sex[ii] = "u"
+dat$Ageclass[dat$Ageclass=="s"] = "sa"
+dat$Ageclass[dat$Ageclass=="o"] = "aa"
+dat$Ageclass[dat$Ageclass=="p"] = "j"
+ii = which(is.na(dat$Ageclass))
+dat$Ageclass[ii] = "u"
+ii = which(dat$Ageclass!="j" & dat$Ageclass!="sa" & dat$Ageclass!="a" & dat$Ageclass!="aa" & dat$Ageclass!="u")
+dat$Ageclass[ii] = "u"
 # Remove bouts with no observed successful dives
 NoDiveSucc = 1
 while(NoDiveSucc>0){
@@ -146,41 +184,43 @@ SE_lgmss = numeric()
 SE_Edens = numeric()
 MassLngFits = list()
 for(i in 1:NPcodes){
-  if(dfPr$PreyType[i] != "UNID"){
-    Nprox = length(which(!is.na(dfPr[i,prx])))
-    jj = numeric()
-    P_ed = numeric()
-    wts = numeric()
-    E_dns = numeric()
-    Vr_E_dns = numeric()
-    for(j in 1:Nprox){ # 
-      kk = which(dfM$SppCode== as.character(dfPr[i,prx[j]]))
-      wts = c(wts,rep(1/length(kk),length(kk)))
-      jj = c(jj,kk)
-      P_ed = c(P_ed,dfElst$AvgOfPrpn_Edible[which(dfElst$SppCode==as.character(dfPr[i,prx[j]]))])
-      ll = which(dfE$SppCode== as.character(dfPr[i,prx[j]]))
-      E_dns = c(E_dns,mean(dfE$kcal_g_edblwet[ll]))
-      if(length(ll)<3){
-        Vr_E_dns = c(Vr_E_dns,(mean(dfE$kcal_g_edblwet_SD[ll]))^2)
-      }else{
-        Vr_E_dns = c(Vr_E_dns,(sd(dfE$kcal_g_edblwet[ll])/sqrt(length(ll)))^2)
+  if(!is.na(dfPr$PreyType[i])){
+    if(dfPr$PreyType[i] != "UNID"){
+      Nprox = length(which(!is.na(dfPr[i,prx])))
+      jj = numeric()
+      P_ed = numeric()
+      wts = numeric()
+      E_dns = numeric()
+      Vr_E_dns = numeric()
+      for(j in 1:Nprox){ # 
+        kk = which(dfM$SppCode== as.character(dfPr[i,prx[j]]))
+        wts = c(wts,rep(1/length(kk),length(kk)))
+        jj = c(jj,kk)
+        P_ed = c(P_ed,dfElst$AvgOfPrpn_Edible[which(dfElst$SppCode==as.character(dfPr[i,prx[j]]))])
+        ll = which(dfE$SppCode== as.character(dfPr[i,prx[j]]))
+        E_dns = c(E_dns,mean(dfE$kcal_g_edblwet[ll]))
+        if(length(ll)<3){
+          Vr_E_dns = c(Vr_E_dns,(mean(dfE$kcal_g_edblwet_SD[ll]))^2)
+        }else{
+          Vr_E_dns = c(Vr_E_dns,(sd(dfE$kcal_g_edblwet[ll])/sqrt(length(ll)))^2)
+        }
       }
+      wts = wts/max(wts)
+      Ped[i] = mean(P_ed)
+      x = log(dfM$MaxLinearDim_mm[jj]); y = log(dfM$TotWetMass[jj])
+      ft = rlm(y ~ x,weights = wts, method = "MM")
+      xx = seq(min(x),max(x),by=.05)
+      # plot(x,y,main=dfPr$PreyCode[i])
+      # lines(xx,predict(ft,newdata = data.frame(x=xx)),col="red")
+      prdct = data.frame(x=xx,ypred=predict(ft,newdata = data.frame(x=xx)))
+      ft$prdct = prdct
+      MassLngFits[[i]] = ft
+      apar[i] = as.numeric(coef(ft)[1])
+      bpar[i] = as.numeric(coef(ft)[2])
+      SE_lgmss[i] = mean(predict(ft,se.fit = T)$se.fit)  
+      Edns[i] = mean(E_dns)
+      SE_Edens[i] = sqrt(sum(Vr_E_dns)/ (Nprox^2) )
     }
-    wts = wts/max(wts)
-    Ped[i] = mean(P_ed)
-    x = log(dfM$MaxLinearDim_mm[jj]); y = log(dfM$TotWetMass[jj])
-    ft = rlm(y ~ x,weights = wts, method = "MM")
-    xx = seq(min(x),max(x),by=.05)
-    # plot(x,y,main=dfPr$PreyCode[i])
-    # lines(xx,predict(ft,newdata = data.frame(x=xx)),col="red")
-    prdct = data.frame(x=xx,ypred=predict(ft,newdata = data.frame(x=xx)))
-    ft$prdct = prdct
-    MassLngFits[[i]] = ft
-    apar[i] = as.numeric(coef(ft)[1])
-    bpar[i] = as.numeric(coef(ft)[2])
-    SE_lgmss[i] = mean(predict(ft,se.fit = T)$se.fit)  
-    Edns[i] = mean(E_dns)
-    SE_Edens[i] = sqrt(sum(Vr_E_dns)/ (Nprox^2) )
   }
 }
 dat$Mass_est = numeric(length = Nobs)*NA
@@ -188,13 +228,15 @@ dat$Edns_est = numeric(length = Nobs)*NA
 dat$SE_lgmss = numeric(length = Nobs)*NA
 dat$SE_Edens = numeric(length = Nobs)*NA
 for(i in 1:NPcodes){
-  if(dfPr$PreyType[i] != "UNID"){
-    jj = which(dat$Prey==dfPr$PreyCode[i] & !is.na(dat$Sz_mm) )
-    if(length(jj)>0){
-      dat$Mass_est[jj] = exp( apar[i] + bpar[i] * log(dat$Sz_mm[jj]) ) * Ped[i]
-      dat$Edns_est[jj] = Edns[i]
-      dat$SE_lgmss[jj] = SE_lgmss[i]
-      dat$SE_Edens[jj] = SE_Edens[i]
+  if(!is.na(dfPr$PreyType[i])){
+    if(dfPr$PreyType[i] != "UNID"){
+      jj = which(dat$Prey==dfPr$PreyCode[i] & !is.na(dat$Sz_mm) )
+      if(length(jj)>0){
+        dat$Mass_est[jj] = exp( apar[i] + bpar[i] * log(dat$Sz_mm[jj]) ) * Ped[i]
+        dat$Edns_est[jj] = Edns[i]
+        dat$SE_lgmss[jj] = SE_lgmss[i]
+        dat$SE_Edens[jj] = SE_Edens[i]
+      }
     }
   }
 }

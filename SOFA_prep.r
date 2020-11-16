@@ -170,7 +170,7 @@ for(i in 1:20){
 writeData(wb, sheet = "Prey_code_key", x = prey_df, startCol = 1)
 # Prey_Types
 addWorksheet(wb, "Prey_Types")
-prey_types_df = data.frame("TypeN" = 1, "PreyType" = "UNID",
+prey_types_df = data.frame("TypeN" = 0, "PreyType" = "UNID",
 													 "Description" = "UN-IDENTIFIED","Class"="")
 writeData(wb, sheet = "Prey_Types", x = prey_types_df, startCol = 1)
 # Add drop-down validation for prey types"

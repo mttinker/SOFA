@@ -63,6 +63,9 @@ if(length(!is.na(dfPr$PreyType))<length(!is.na(dfPr$PreyCode))){
 								"please go back and edit. Stopping program."))
 	stop_quietly()
 }
+# Make the last prey type UNID:
+Nptps = max(dfPtp$TypeN); dfPtp = rbind(dfPtp[2:nrow(dfPtp),],dfPtp[1,])
+dfPtp$TypeN[nrow(dfPtp)] = Nptps + 1
 #  Create vector of selection variables for data sub-setting or grouping 
 slctvars = c("Area", "Site", "Period", "Sex", "Ageclass", "Ottername", "Pup")
 # Note: determine which of these potential selection variables has enough levels
@@ -123,11 +126,13 @@ rspns = dlg_message(c("Do you wish to review plots of mass-length data fits (can
 if (rspns=="yes"){
 	# Generate mass-length plots by prey code
 	for(pr in 1:nrow(dfPr)){
-		if(dfPr$PreyType[pr] != "UNID"){
-			ft = MassLngFits[[pr]]
-			plot(exp(ft$model$x),exp(ft$model$y),main=dfPr$Description[pr],
-					 xlab="size (mm)",ylab="mass (g)")
-			lines(exp(ft$prdct$x),exp(ft$prdct$ypred),col="red")
+		if(!is.na(dfPr$PreyType[pr])){
+			if(dfPr$PreyType[pr] != "UNID"){
+				ft = MassLngFits[[pr]]
+				plot(exp(ft$model$x),exp(ft$model$y),main=dfPr$Description[pr],
+						 xlab="size (mm)",ylab="mass (g)")
+				lines(exp(ft$prdct$x),exp(ft$prdct$ypred),col="red")
+			}
 		}
 	}
 }
