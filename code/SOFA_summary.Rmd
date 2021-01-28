@@ -57,7 +57,7 @@ $$T{{M}_{j,i}}~=\frac{1}{60}\left[ \sum{D{{T}_{j,i}}+}\sum{H{{T}_{j,i}}+}\left( 
 
 We note that one of the prey types for which we calculate total allocated minutes consists of un-identified prey items (UNID): we assume that these UNID prey items are a collection of all the other known prey types, but we do not know *a priori* the proportion of each known prey type comprising the UNID category.
 
-In addition to calculating the total time allocated to each prey in each bout, we can also calculate the biomass consumed for each prey type: this is accomplished by converting the linear size of each prey item (*SZ*~j~, in mm) to biomass. Linear size is estimated by observers as the maximum linear dimension of a prey item relative to a paw width (excluding appendages), and this value is converted into an estimate of edible biomass using a set of empirically derived log-log functional relationships between linear dimension and edible biomass for each prey type. We then sum the estimated edible biomass for all recorded items of prey type *j* observed in a bout (or a portion of a bout), and divide by the total number of minutes of a bout allocated to prey type *j*in that bout (or a portion of a bout), to obtain the observed consumption rate for that prey type (*CRobs*~j,i~), in g/min.  For each observed bout we calculate several key statistics: *TM*~j,i~ and *CRobs*~j,i~, as well as the mean values of handling time and prey size for each prey type (*HTmn*~j,i~ and *SZmn*~j,i~ ).  
+In addition to calculating the total time allocated to each prey in each bout, we can also calculate the biomass consumed for each prey type: this is accomplished by converting the linear size of each prey item (*SZ*~j~, in mm) to biomass. Linear size is estimated by observers as the maximum linear dimension of a prey item relative to a paw width (excluding appendages), and this value is converted into an estimate of edible biomass using a set of empirically derived log-log functional relationships between linear dimension and edible biomass for each prey type. We then sum the estimated edible biomass for all recorded items of prey type *j* observed in a bout (or a portion of a bout), and divide by the total number of minutes of a bout allocated to prey type *j*in that bout (or a portion of a bout), to obtain the observed consumption rate for that prey type (*CRobs*~j,i~), in g/min.  For each observed bout we calculate several key statistics: *TM*~j,i~ and *CRobs*~j,i~, as well as the mean values of handling time and prey size for each prey type (*HTmn*~j,i~ and *SZmn*~j,i~ ), and the proportion of successful dives associated with each prey item (*PSD*~j~, calculated by partitioning unsuccessful dives among prey types according to their proportional contributions to confirmed allocated time, *PA*~j~).  
 
 ### Process model
 The observed activity of sea otter foraging can be approximated by a sequence of mathematical equations that together represent the process model, the expected dynamics of which are determined by the values of the parameters in the equations (Table 1). We let $\eta_j$ represent the mean proportional allocation of foraging effort to prey type *j*, excluding the UNID class (i.e. TRUE effort allocation if all prey were positively identified), such that:
@@ -80,6 +80,11 @@ $${{{\bar{S}}}_{j}}=\exp \left( {{\mu }_{s,j}}+{}^{\sigma _{s,j}^{2}}\!\!\diagup
 $${{{\bar{H}}}_{j}}=\exp \left( ({{\mu }_{h,j}}|{{\mu }_{s,j}},{{\psi }_{j}})+{}^{\sigma _{h,j}^{2}}\!\!\diagup\!\!{}_{2}\; \right)$$
 $${{\overline{cr}}_{j}}=\exp \left( ({{\mu }_{c,j}}|{{\mu }_{s,j}},{{\phi }_{j}})+{}^{\sigma _{c,j}^{2}}\!\!\diagup\!\!{}_{2}\; \right)$$
 
+We define parameter $\lambda_{j}$ the expected proportion of successful dives associated with each prey type, which we estimate as a logit parameter with Cauchy prior:
+$$logit( \lambda_j ) \sim\ Cauchy\left( 0 , 2.5 \right)$$
+And the overall mean dive success rate is calculated as:
+$$\overline{\lambda } = {\sum\limits_{j=1}^{J}{{{\eta }_{j}}\cdot {{\overline{\lambda}}_{j}}}}\;$$
+
 We define several other "derived" parameters that help simplify or expand our interpretation of model results. The rate of energy intake associated with foraging on prey type *j* (*er*~j~) is calculated by multiplying the consumption rate of prey type *j* by the caloric density of edible biomass (*Cdens*~j~) for that prey type, based on published values.  We also integrate consumption rate and energy intake rates across all prey types, accounting for proportional allocation of effort among prey types, to obtain the overall consumption rate (CR) and energy intake rate (ER):  
 $$\overline{CR}=\sum\limits_{j=1}^{J}{{{\eta }_{j}}\cdot {{\overline{cr}}_{j}}}$$
 $$\overline{ER}=\sum\limits_{j=1}^{J}{{{\eta }_{j}}\cdot {{\overline{cr}}_{j}}\cdot Cden{{s}_{j}}}$$
@@ -89,17 +94,19 @@ $${{\pi }_{j}}={\left( {{\eta }_{j}}\cdot {{\overline{cr}}_{j}} \right)}/{\sum\l
 
 Finally, the process model can be modified to account for random effects of categorical group variables (age, sex, area, time period) by utilizing a hierarchical approach for certain key parameters.  We allow foraging effort to vary across groups using a Dirichlet-Multinomial approach:
 $${{\eta }_{g,j}}\sim Dirichlet\left( {{\eta }_{j}}\cdot {{\tau }_{G}} \right)$$
-where $\eta_{g,j}$ is the mean proportional allocation of foraging effort to prey type *j* in bouts belonging to group level *g*, and parameter $\tau_G$ is a fitted precision parameter that determines the degree of consistency in diet across groups. We assume that log prey size for each prey type is normally distributed across groups with mean equal to ${\bar{\mu}}_{s,j}$ and standard error as a fitted parameter.  We make the same assumption for $phi_{1,j}$ and $psi_{1,j}$, thereby allowing prey specific handling times and consumption rates to vary across groups.  By treating these base parameters hierarchically, we also allow for variation in the derived parameters of diet composition, mean consumption rates and mean energy intake rates across groups. Table 1 provides a summary of all parameters estimated by the model.
+where $\eta_{g,j}$ is the mean proportional allocation of foraging effort to prey type *j* in bouts belonging to group level *g*, and parameter $\tau_G$ is a fitted precision parameter that determines the degree of consistency in diet across groups. We assume that log prey size for each prey type is normally distributed across groups with mean equal to ${\bar{\mu}}_{s,j}$ and standard error as a fitted parameter.  We make the same assumption for $\phi_{1,j}$, $\psi_{1,j}$ and $\lambda_{j}$, thereby allowing prey specific handling times, consumption rates and dive success rates to vary across groups.  By treating these base parameters hierarchically, we also allow for variation in the derived parameters of diet composition, mean consumption rates and mean energy intake rates across groups. Table 1 provides a summary of all parameters estimated by the model.
 
 ##### **Table 1. Summary of estimated parameters**
 |Parameter | Description |
 |:--------|---------|
 | $\overline{CR}$ | Mean overall net consumption rate (CR, g/min) while foraging |
 | $\overline{ER}$ | Mean overall net energy intake rate (ER, kcal/min) while foraging |
+| $\overline{\lambda }$ | Mean overall dive success rate (proportion successful dives)  |
 | ${{\bar{S}}_{j}}$ | Mean size, prey type j |
 | ${{\bar{H}}_{j}}$ | Mean handling time, prey type j |
 | ${{\bar{cr}}_{j}}$ | Mean consumption rate, prey type j |
 | ${{\bar{er}}_{j}}$ | Mean energy intake rate, prey type j |
+| ${{\bar{\lambda }}_{j}}$ | Mean dive success rate, prey type j |
 | ${{\bar{\phi }}_{1,j}}$ | CR vs log(Size) function, intercept parameter, prey type j  |
 | ${{\phi }_{2,j}}$ | CR vs log(Size) function, slope parameter, prey type j |
 | ${{\bar{\psi }}_{1,j}}$ | HT vs log(Size) function, intercept parameter, prey type j  |
@@ -110,14 +117,17 @@ where $\eta_{g,j}$ is the mean proportional allocation of foraging effort to pre
 | $\sigma_{c,j}$ | Std error in log(CR) across bouts for a given prey type |
 | $\sigma_{h,j}$ | Std error in log(H) across bouts for a given prey type |
 | $\sigma_{s,j}$ | Std error in log(S) across bouts for a given prey type |
+| $\sigma_{l,j}$ | Std error in logit(lambda) across bouts for a given prey type |
 | ${{\tau }_{B}}$ | Precision (consistency) in diet composition across bouts (within group) |
 | ${{\tau }_{G}}$ | Precision (consistency) in diet composition across groups (if defined)|
 | ${{CR}_{g}}$ | Mean net consumption rate (CR, g/min) while foraging, group g |
 | ${{ER}_{g}}$ | Mean net energy intake rate (ER, kcal/min) while foraging, group g |
+| ${{\bar{\lambda} }_{g}}$ | Mean overall dive success rate, group g |
 | ${{S}_{g,j}}$ | Mean size, prey type j, group g |
 | ${{H}_{g,j}}$ | Mean handling time, prey type j, group g |
 | ${{cr}_{g,j}}$ | Mean consumption rate, prey type j, group g |
 | ${{er}_{g,j}}$ | Mean energy intake rate, prey type j, group g |
+| ${{\lambda }_{g,j}}$ | Mean dive success rate, prey type j, group g |
 | ${{\phi }_{1,g,j}}$ | CR vs log(Size) function, intercept parameter, prey type j, group g |
 | ${{\psi }_{1,g,j}}$ | HT vs log(Size) function, intercept parameter, prey type j, group g |
 | ${{\eta }_{g,j}}$ | Proportion of foraging effort allocated to prey type j, group g |
@@ -138,7 +148,11 @@ $$HTm{{n}_{j,i}}\sim\ lognormal\left( {{\mu }_{h,j}},{{\sigma }_{h,j}} \right)$$
 $$CRob{{s}_{j,i}}\sim\ lognormal\left( {{\mu }_{c,j}},{{\sigma }_{c,j}} \right)$$
 where $\sigma_{h,j}$ and $\sigma_{c,j}$ are fitted parameters describing variance in these statistics across bouts.  
 
-We used standard Markov-Chain Monte Carlo methods to fit the model to the foraging data, with uninformative priors for all model parameters.  We evaluated model convergence by graphically examining chain mixing and ensuring that the Rhat statistic was close to 1 for all estimated parameters. We evaluated model fit using graphical posterior predictive checks, ensuring that the distributions of out-of-sample predictions were consistent with observed data. We present summaries of posterior distributions for both base parameters and derived parameters such as energy intake rate.
+We assume that the observed dives success rates specific to each prey type (*PSD*~j~), logit-transformed, are described by a normal distribution: 
+$$logit(PSD_j ) \sim\ normal\left( logit({{\lambda }_{j}}), {{\sigma }_{l,j}} \right)$$
+where $\sigma_{l,j}$ is a fitted parameter describing variance in logit dive success rate across bouts.
+
+We used standard Markov-Chain Monte Carlo methods to fit the model to the foraging data, with uninformative priors for all model parameters (Cauchy priors for unconstrained parameters and half-Cauchy priors for parameters constrained to be positive).  We evaluated model convergence by graphically examining chain mixing and ensuring that the Rhat statistic was close to 1 for all estimated parameters. We evaluated model fit using graphical posterior predictive checks, ensuring that the distributions of out-of-sample predictions were consistent with observed data. We present summaries of posterior distributions for both base parameters and derived parameters such as energy intake rate.
 
 <div style="margin-bottom:50px;">
 </div>
@@ -148,7 +162,7 @@ Both graphical and tabular results are presented below. In some cases prey types
 
 ```{r Table2, echo=FALSE}
 kable(dfPtp, row.names = FALSE, align = "l",
-      caption = "Table 2. Prey types included in the analysis")
+      caption = "**Table 2.** Prey types included in the analysis")
 
 ```
 
@@ -158,7 +172,7 @@ If the SOFA analysis being summarized incorporated group-level differences in fo
 
 ```{r Table2b, echo=FALSE, eval=Grp_TF}
 kable(Grouplist, row.names = FALSE, align = "l",
-      caption = "Table 2b. Group levels used for by-group statitics")
+      caption = "**Table 2b.** Group levels used for by-group statitics")
 
 ```
 
@@ -363,13 +377,14 @@ mcmc_intervals(post,
 ```{r Table3, echo=FALSE}
 
 ii = c(which(vns=="CRmn"), 
-       which(vns=="ERmn"))
+       which(vns=="ERmn"),
+			 which(vns=="LMmn"))
 
-paramstats = data.frame(Parameter = c("CR_bar","ER_bar" ))
+paramstats = data.frame(Parameter = c("CR_bar","ER_bar","Lambda_bar"))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 paramstats <- paramstats %>% mutate_if(is.numeric, signif, digits = 4)
 kable(paramstats, row.names = FALSE, align = "l",
-      caption = "Table 3. Parameter estimates for consumption rate (${{\\bar{CR}}}$, g/min) and rate of energy intake (${{\\bar{ER}}}$, kcal/min) for the overall data set")
+      caption = "**Table 3.** Parameter estimates for consumption rate (${{\\bar{CR}}}$, g/min), rate of energy intake (${{\\bar{ER}}}$, kcal/min), and dive success rate ($\\bar{\\lambda}$) for the overall data set")
  
 
 ```
@@ -381,7 +396,7 @@ ii = c(which(startsWith(vns,"SZ[")))
 paramstats = data.frame(Parameter = c(paste0("S_bar_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 4. Parameter estimates for mean size, ${{\\bar{S}}_{j}}$ (mm), by prey type, for the overall data set")
+      caption = "**Table 4.** Parameter estimates for mean size, ${{\\bar{S}}_{j}}$ (mm), by prey type, for the overall data set")
 
 ```
 
@@ -392,7 +407,7 @@ ii = c(which(startsWith(vns,"HT[")))
 paramstats = data.frame(Parameter = c(paste0("H_bar_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 5. Parameter estimates for mean handling time, ${{\\bar{H}}_{j}}$ (sec), by prey type, for the overall data set")
+      caption = "**Table 5.** Parameter estimates for mean handling time, ${{\\bar{H}}_{j}}$ (sec), by prey type, for the overall data set")
 
 ```
 
@@ -403,7 +418,7 @@ ii = c(which(startsWith(vns,"CR[")))
 paramstats = data.frame(Parameter = c(paste0("cr_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 6. Parameter estimates for mean consumption rate by prey type ${{\\bar{cr}}_{j}}$ (g/min), for the overall data set")
+      caption = "**Table 6.** Parameter estimates for mean consumption rate by prey type ${{\\bar{cr}}_{j}}$ (g/min), for the overall data set")
 
 ```
 
@@ -414,119 +429,135 @@ ii = c(which(startsWith(vns,"ER[")))
 paramstats = data.frame(Parameter = c(paste0("er_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 7. Parameter estimates for mean energy intake rate by prey type ${{\\bar{er}}_{j}}$ (kcal/min), for the overall data set")
+      caption = "**Table 7.** Parameter estimates for mean energy intake rate by prey type ${{\\bar{er}}_{j}}$ (kcal/min), for the overall data set")
 
 ```
 
+
 ```{r Table8, echo=FALSE}
+
+ii = c(which(startsWith(vns,"LM[")))
+
+paramstats = data.frame(Parameter = c(paste0("lambda_",seq(1,(NPtypes-1))) ))
+paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
+kable(paramstats, row.names = FALSE,
+      caption = "**Table 8.** Parameter estimates for $\\lambda$~*j*~, mean dive success rate by prey type, for the overall data set")
+
+```
+
+
+```{r Table9, echo=FALSE}
 
 ii = c(which(startsWith(vns,"phi1[")))
 
 paramstats = data.frame(Parameter = c(paste0("phi_1_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 8. Estimates for $\\phi$~*1,j*~, intercept parameter for function relating log consumption rate to log size, by prey type, for the overall data set")
+      caption = "**Table 9.** Estimates for $\\phi$~*1,j*~, intercept parameter for function relating log consumption rate to log size, by prey type, for the overall data set")
 
 ```
 
-```{r Table9, echo=FALSE}
+```{r Table10, echo=FALSE}
 
 ii = c(which(startsWith(vns,"phi2[")))
 
 paramstats = data.frame(Parameter = c(paste0("phi_2_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 9. Estimates for $\\phi$~*2,j*~, slope parameter for function relating log consumption rate to log size, by prey type, for the overall data set")
+      caption = "**Table 10.** Estimates for $\\phi$~*2,j*~, slope parameter for function relating log consumption rate to log size, by prey type, for the overall data set")
 
 ```
 
-```{r Table10, echo=FALSE}
+```{r Table11, echo=FALSE}
 
 ii = c(which(startsWith(vns,"psi1[")))
 
 paramstats = data.frame(Parameter = c(paste0("psi_1_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 10. Estimates for $\\psi$~*1,j*~, intercept parameter for function relating log handling time to log size, by prey type, for the overall data set")
+      caption = "**Table 11.** Estimates for $\\psi$~*1,j*~, intercept parameter for function relating log handling time to log size, by prey type, for the overall data set")
 
 ```
 
-```{r Table11, echo=FALSE}
+```{r Table12, echo=FALSE}
 
 ii = c(which(startsWith(vns,"psi2[")))
 
 paramstats = data.frame(Parameter = c(paste0("psi_2_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 11. Estimates for $\\psi$~*2,j*~, slope parameter for function relating log handling time to log size, by prey type, for the overall data set")
+      caption = "**Table 12.** Estimates for $\\psi$~*2,j*~, slope parameter for function relating log handling time to log size, by prey type, for the overall data set")
 
 ```
 
-```{r Table12, echo=FALSE}
+```{r Table13, echo=FALSE}
 
 ii = c(which(startsWith(vns,"eta[")))
 
 paramstats = data.frame(Parameter = c(paste0("eta_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 12. Estimates for $\\eta$~*j*~, proportional allocation of effort to prey type j, for the overall data set")
+      caption = "**Table 13.** Estimates for $\\eta$~*j*~, proportional allocation of effort to prey type j, for the overall data set")
 
 ```
 
-```{r Table13, echo=FALSE}
+```{r Table14, echo=FALSE}
 
 ii = c(which(startsWith(vns,"Pi[")))
 
 paramstats = data.frame(Parameter = c(paste0("pi_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 13. Estimates for $\\pi$~*j*~, proportion of diet (consumed biomass) consisting of prey type j, for the overall data set")
+      caption = "**Table 14.** Estimates for $\\pi$~*j*~, proportion of diet (consumed biomass) consisting of prey type j, for the overall data set")
 
 ```
 
-```{r Table13b, echo=FALSE}
+```{r Table14b, echo=FALSE}
 
 ii = c(which(startsWith(vns,"Pi[")))
 
 kable(Pclass_stats[,-2], row.names = FALSE,
-      caption = "Table 13b. Estimates for proportion of diet (consumed biomass) by prey Class (standardized definitions), for the overall data set")
+      caption = "**Table 14b.** Estimates for proportion of diet (consumed biomass) by prey Class (standardized definitions), for the overall data set")
 
 ```
 
-```{r Table14, echo=FALSE}
+```{r Table15, echo=FALSE}
 
 ii = c(which(startsWith(vns,"Omega[")))
 
 paramstats = data.frame(Parameter = c(paste0("omega_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 14. Estimates for $\\omega$~*j*~, probability that prey type *j* is positively identified (and thus not recorded as 'Un-ID' prey)")
+      caption = "**Table 15.** Estimates for $\\omega$~*j*~, probability that prey type *j* is positively identified (and thus not recorded as 'Un-ID' prey)")
 
 ```
 
-```{r Table15, echo=FALSE}
+```{r Table16, echo=FALSE}
 
 ii = c(which(startsWith(vns,"sigSZ[")), 
        which(startsWith(vns,"sigHT[")),
        which(startsWith(vns,"sigCR[")),
+			 which(startsWith(vns,"sigLM[")),
        which(startsWith(vns,"tauB")),
        which(startsWith(vns,"tauG")))
 if(Grp_TF){
   paramstats = data.frame(Parameter = c(paste0("sigma_s_",seq(1,(NPtypes-1))),
                                       paste0("sigma_h_",seq(1,(NPtypes-1))),
                                       paste0("sigma_c_",seq(1,(NPtypes-1))),
+  																		paste0("sigma_l_",seq(1,(NPtypes-1))),
                                       paste0("tau_b_",seq(1,Ngrp)),
                                       "tau_g"))
 }else{
   paramstats = data.frame(Parameter = c(paste0("sigma_s_",seq(1,(NPtypes-1))),
                                       paste0("sigma_h_",seq(1,(NPtypes-1))),
                                       paste0("sigma_c_",seq(1,(NPtypes-1))),
+  																		paste0("sigma_l_",seq(1,(NPtypes-1))),
                                       "tau_b"))
 }
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 paramstats <- paramstats %>% mutate_if(is.numeric, signif, digits = 4)
 kable(paramstats, row.names = FALSE, align = "l",
-      caption = "Table 15. Estimates for model variance and precision parameters. Prey-specific standard error values are shown for log-normally distributed observed variables of prey size ($\\sigma_{s,j}$), handling time ($\\sigma_{h,j}$) and consumption rate ($\\sigma_{c,j}$). Also shown are precision parameters for Dirichlet distributions that describe the relative frequencies of different prey types. Precision parameters determine the consistency in diet composition across bouts ($\\tau$~*b*~) and, if applicable, across different groups ($\\tau$~*g*~)") 
+      caption = "**Table 16.** Estimates for model variance and precision parameters. Prey-specific standard error values are shown for log-normally distributed observed variables of prey size ($\\sigma_{s,j}$), handling time ($\\sigma_{h,j}$), consumption rate ($\\sigma_{c,j}$) and dive success rate ($\\sigma_{l,j}$). Also shown are precision parameters for Dirichlet distributions that describe the relative frequencies of different prey types. Precision parameters determine the consistency in diet composition across bouts ($\\tau$~*b*~) and, if applicable, across different groups ($\\tau$~*g*~)") 
 
 ```
 
@@ -535,116 +566,132 @@ kable(paramstats, row.names = FALSE, align = "l",
 
 `r if(params$show.grptxt){"### Tables, statistics by group level "}`
 
-```{r Table16, eval=Grp_TF, echo=FALSE}
+```{r Table17, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"CRgmn[")), 
-       which(startsWith(vns,"ERgmn[")))
+       which(startsWith(vns,"ERgmn[")),
+			 which(startsWith(vns,"LMgmn[")))
 
 paramstats = data.frame(Parameter = c(paste0("CR_",seq(1,Ngrp)),
-                                      paste0("ER_",seq(1,Ngrp)) ))
+                                      paste0("ER_",seq(1,Ngrp)),
+																			paste0("Lambda_",seq(1,Ngrp)) ))
+
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 paramstats <- paramstats %>% mutate_if(is.numeric, signif, digits = 4)
 kable(paramstats, row.names = FALSE, align = "l",
-      caption = "Table 16. Parameter estimates for consumption rate (*CR*~*g*~, g/min) and rate of energy intake (*ER*~*g*~, kcal/min) for each group level *g*")
+      caption = "**Table 17.** Parameter estimates for consumption rate (*CR*~*g*~, g/min), rate of energy intake (*ER*~*g*~, kcal/min) and dive success rate ($\\lambda$) for each group level *g*")
 
 ```
 
-```{r Table17, eval=Grp_TF, echo=FALSE}
+```{r Table18, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"SZg[")))
 
 paramstats = data.frame(Parameter = c(paste0("S_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 17. Parameter estimates for mean size, *S*~*g,j*~, by group level *g* and by prey type *j*")
+      caption = "**Table 18.** Parameter estimates for mean size, *S*~*g,j*~, by group level *g* and by prey type *j*")
 
 ```
 
-```{r Table18, eval=Grp_TF, echo=FALSE}
+```{r Table19, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"HTg[")))
 
 paramstats = data.frame(Parameter = c(paste0("H_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 18. Parameter estimates for mean handling time, *H*~*g,j*~, by group level *g* and by prey type *j*")
+      caption = "**Table 19.** Parameter estimates for mean handling time, *H*~*g,j*~, by group level *g* and by prey type *j*")
 
 ```
 
-```{r Table19, eval=Grp_TF, echo=FALSE}
+```{r Table20, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"CRg[")))
 
 paramstats = data.frame(Parameter = c(paste0("cr_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 19. Parameter estimates for mean consumption rate *cr*~*g,j*~, by group level *g* and by prey type *j*")
+      caption = "**Table 20.** Parameter estimates for mean consumption rate *cr*~*g,j*~, by group level *g* and by prey type *j*")
 
 ```
 
-```{r Table20, eval=Grp_TF, echo=FALSE}
+```{r Table21, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"ERg[")))
 
 paramstats = data.frame(Parameter = c(paste0("er_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 20. Parameter estimates for mean energy intake rate *er*~*g,j*~, (kcal/min), by group level *g* and by prey type *j*")
+      caption = "**Table 21.** Parameter estimates for mean energy intake rate *er*~*g,j*~, (kcal/min), by group level *g* and by prey type *j*")
 
 ```
 
-```{r Table21, eval=Grp_TF, echo=FALSE}
+
+```{r Table22, eval=Grp_TF, echo=FALSE}
+
+ii = c(which(startsWith(vns,"LMg[")))
+
+paramstats = data.frame(Parameter = c(paste0("lambda_",rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
+paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
+kable(paramstats, row.names = FALSE,
+      caption = "**Table 22.** Parameter estimates for $\\lambda$~*g,j*~, mean dive success rate by group level *g* and by prey type *j*")
+
+```
+
+
+```{r Table23, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"phi1G[")))
 
 paramstats = data.frame(Parameter = c(paste0("phi_1_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 21. Estimates for $\\phi$~*1,g,j*~, intercept parameter for function relating log consumption rate to log size, for each group *g* and prey type *j*")
+      caption = "**Table 23.** Estimates for $\\phi$~*1,g,j*~, intercept parameter for function relating log consumption rate to log size, for each group *g* and prey type *j*")
 
 ```
 
-```{r Table22, eval=Grp_TF, echo=FALSE}
+```{r Table24, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"psi1G[")))
 
 paramstats = data.frame(Parameter = c(paste0("psi_1_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 22. Estimates for $\\psi$~*1,g,j*~, intercept parameter for function relating log handling time to log size, for each group *g* and prey type *j*")
+      caption = "**Table 24.** Estimates for $\\psi$~*1,g,j*~, intercept parameter for function relating log handling time to log size, for each group *g* and prey type *j*")
 
 ```
 
-```{r Table23, eval=Grp_TF, echo=FALSE}
+```{r Table25, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"etaG[")))
 
 paramstats = data.frame(Parameter = c(paste0("eta_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 23. Estimates for $\\eta$~*g,j*~, proportional allocation of effort to prey type j, for each group level *g*")
+      caption = "**Table 25.** Estimates for $\\eta$~*g,j*~, proportional allocation of effort to prey type j, for each group level *g*")
 
 ```
 
-```{r Table24, eval=Grp_TF, echo=FALSE}
+```{r Table26, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"PiG[")))
 
 paramstats = data.frame(Parameter = c(paste0("pi_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 24. Estimates for $\\pi$~*g,j*~, proportion of diet (consumed biomass) consisting of prey type j, for each group level *g*")
+      caption = "**Table 26.** Estimates for $\\pi$~*g,j*~, proportion of diet (consumed biomass) consisting of prey type j, for each group level *g*")
 
 ```
 
-```{r Table25, eval=Grp_TF, echo=FALSE}
+```{r Table27, eval=Grp_TF, echo=FALSE}
 
 ii = c(which(startsWith(vns,"OmegaG[")))
 
 paramstats = data.frame(Parameter = c(paste0("omega_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 kable(paramstats, row.names = FALSE,
-      caption = "Table 25. Estimates for $\\omega$~*g,j*~, probability that prey type *j* is positively identified (and thus not recorded as 'Un-ID' prey) for each group level *g* ")
+      caption = "**Table 27.** Estimates for $\\omega$~*g,j*~, probability that prey type *j* is positively identified (and thus not recorded as 'Un-ID' prey) for each group level *g* ")
 
 ```
 

@@ -45,7 +45,7 @@ MnN2 = as.numeric(dlg_input(message = "Min dives/bout for estimating effort allo
 nsamples = as.numeric(dlg_input(message = "Number posterior samples from Bayesian fitting", 
 														default = 10000)$res)
 nburnin = as.numeric(dlg_input(message = "Number of burn-in samples for Bayesian fitting", 
-														default = 750)$res)
+														default = 1000)$res)
 # Process data---------------------------------------------------------------
 # Load data (after selecting Projectname from available sub-folders of data folder)
 dat = read_excel(paste0("./projects/",Projectname,"/Forage_dat.xlsx"))
@@ -198,19 +198,19 @@ ncore = min(20,cores-1)
 Niter = round(nsamples/ncore)+nburnin
 #
 if(GrpOpt==0){
-	params <- c("tauB","maxPunid","CRmn","ERmn","SZ","SZ_u",
+	params <- c("tauB","maxPunid","CRmn","ERmn","LMmn","SZ","SZ_u",
 							"HT","HT_u","CR","ER","eta","Pi","Omega",
-							"phi1","phi2","psi1","psi2",
-							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u") 
+							"phi1","phi2","psi1","psi2","LM",
+							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u","sigLM") 
 							# "muSZ","muSZ_u","psi1_u","psi2_u",
 }else{
-	params <- c("tauB","tauG","maxPunid","CRmn","ERmn","SZ",
+	params <- c("tauB","tauG","maxPunid","CRmn","ERmn","LMmn","SZ",
 							"SZ_u","HT","HT_u","CR","ER","eta","Pi",
-							"Omega","phi1","phi2","psi1","psi2",
-							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u",
-							"CRgmn","ERgmn","SZg","SZg_u","HTg","CRg","ERg",
-							"etaG","PiG","OmegaG","phi1G","psi1G",
-							"sg1","sg2","sg3","sg4","sg5") 
+							"Omega","phi1","phi2","psi1","psi2","LM",
+							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u","sigLM",
+						 	"CRgmn","ERgmn","LMgmn","SZg","SZg_u","HTg","CRg","ERg",
+					  	"LMg","etaG","PiG","OmegaG","phi1G","psi1G",
+							"sg1","sg2","sg3","sg4","sg5","sg6") 
 							# "muSZ","muSZ_u","muSZG","muSZG_u","psi1_u","psi2_u","psi1G_u",
 }
 #

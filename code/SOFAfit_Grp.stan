@@ -14,6 +14,7 @@ data {
   int<lower=1> NSz;               // Number of prey Size obs
   int<lower=1> NHt;               // Number of prey Handling time (HT) obs  
   int<lower=1> NCR;               // Number of prey Consumption rate obs
+  int<lower=1> NLm;               // Number of dive success rate obs (lambda)
   int<lower=1> NU[2];             // Number of un-ID prey obs (2 different param types, FOR NOW)
   real<lower=0> SZmnU[NU[1]];     // Array of mean prey size vaues (mm) for UN-ID prey, by bout  
   real<lower=0> HTmnU[NU[2]];     // Array of mean handling times (sec), for UN-ID prey, by bout 
@@ -39,6 +40,10 @@ data {
   vector<lower=0>[Km1] Cal_dns_mn;// Vector of caloric density values (kcal/g) by prey type, mean
   vector<lower=0>[Km1] Cal_dns_sg;// Vector of caloric density values (kcal/g) by prey type, std err
   vector<lower=0>[Km1] logMass_sg;// Vector of std err vlues for log-log fxn of bomass vs size
+  int<lower=1,upper=Km1> Lp[NLm]; // Array of prey id values for success rate obs
+  int<lower=1,upper=Ngrp> Lg[NLm];// Array of group id values for Dive success rate
+  real LMlg[NLm];                 // Array of logit(lambda), proportion of succesful dives by prey, by bout  
+  vector[NLm] Lss;                // Array of sample sizes (n obs per bout) for logit lambda observations   
 }
 // Section 2. The parameters to be estimated 
 parameters {
@@ -51,6 +56,9 @@ parameters {
   vector<lower=0>[Km1] muSZG[Ngrp] ;  // mean of log(Size_cm) of each prey type, by group 
   real<lower=0> muSZ_u ;         // mean of log(Size_cm) of UN-ID
   real<lower=0> muSZG_u[Ngrp] ;         // mean of log(Size_cm) of UN-ID, by group
+  vector[Km1] lgtLM ;            // mean logit(lambda) (dive success rate) for each prey
+  vector[Km1] lgtLMG[Ngrp] ;     // mean logit(lambda) (dive success rate) for each prey, by group
+  vector<lower=0>[Km1] sigLM ;   // stdev of logit(lambda) of each prey 
   vector<lower=0>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey 
   vector<lower=0>[Km1] sigHT ;   // stdev of log(HT per item) of each prey 
   vector<lower=0>[Km1] sigCR ;   // stdev of log(HT per item) of each prey 
@@ -73,6 +81,7 @@ parameters {
   real<lower=0> sg3 ;        // stdev of hierarchical param 
   real<lower=0> sg4 ;        // stdev of hierarchical param 
   real<lower=0> sg5 ;        // stdev of hierarchical param 
+  real<lower=0> sg6 ;        // stdev of hierarchical param 
 }
 // Section 3. Derived (transformed) parameters
 transformed parameters {
@@ -83,6 +92,7 @@ transformed parameters {
   vector[NU[2]] HTmnU_E;            // Array of expected log mean handling times (sec), for UN-ID prey, by bout    
   vector[NSz] SZmn_E;               // Array of expected log mean prey size vaues (mm) by prey, by bout
   vector[NU[1]] SZmnU_E;            // Array of expected log mean prey size vaues (mm) for UnID, by bout
+  vector[NLm] lgtLM_E;              // Array of expected logit lambda
   //
   for (g in 1:Ngrp){  
     real muHT_u ;                     // mean of log(HT per item) of UN-ID   
@@ -128,7 +138,10 @@ transformed parameters {
   }  
   for(i in 1:NU[1]){
     SZmnU_E[i] = muSZG_u[Sg_u[i]] + ((Sss_u[i] * square(sigSZ_u)) - square(sigSZ_u)) / (2 * Sss_u[i]) ;
-  }  
+  }
+  for(i in 1:NLm){
+    lgtLM_E[i] = lgtLMG[Lg[i]][Lp[i]] ;
+  }
 }
 // Section 4. Estimating model parameters (drawing from probability distributions)
 model {
@@ -141,12 +154,14 @@ model {
   // Observed consumption rate (g/min) by prey type, random samples
   CRate ~ lognormal(CRate_E, sigCR[Cp] ./ sqrt(Css) ) ;
   // Observed Handling time (sec), random samples, ID prey & UN-id prey
-  HTmn ~ lognormal(HTmn_E, sigHT[Hp] ./ Hss) ;
-  HTmnU ~ lognormal(HTmnU_E, sigHT_u ./ Hss_u) ;  
+  HTmn ~ lognormal(HTmn_E, sigHT[Hp] ./ sqrt(Hss) ) ;
+  HTmnU ~ lognormal(HTmnU_E, sigHT_u ./ sqrt(Hss_u) ) ;  
   // Observed Mean prey size (mm), random samples, ID prey & UN-id prey
-  SZmn ~ lognormal(SZmn_E, sigSZ[Sp] ./ sqrt(Sss)) ;
-  SZmnU ~ lognormal(SZmnU_E, sigSZ_u ./ Sss_u) ;
-  //
+  SZmn ~ lognormal(SZmn_E, sigSZ[Sp] ./ sqrt(Sss) ) ;
+  SZmnU ~ lognormal(SZmnU_E, sigSZ_u ./ sqrt(Sss_u) ) ;
+  // Observed logit(lambda), dive succes rate by bout/prey, random samples 
+  LMlg ~ normal(lgtLM_E, sigLM[Lp] ./ sqrt(Lss) ) ;  
+  //  
   // B) Prior distributions for model parameters:
   Cal_dens ~ normal(Cal_dns_mn,Cal_dns_sg) ; // Caloric density (incorporates est. uncertainty)
   lgSz_adj ~ normal(0,logMass_sg) ;          // CRate adjust (incorporates est. uncertainty)
@@ -157,6 +172,7 @@ model {
     psi1G_u[g] ~ normal(psi1_u,sg3);
     muSZG[g] ~ normal(muSZ,sg4);
     muSZG_u[g] ~ normal(muSZ_u,sg5);
+    lgtLMG[g] ~ normal(lgtLM,sg6);
   }
   tauB ~ cauchy(0,1) ;    // precision param for diet comp variation across bouts
   tauG ~ cauchy(0,1) ;    // precision param for diet comp variation across bouts
@@ -174,11 +190,14 @@ model {
   sigCR ~ cauchy(0,2.5);   // variation in prey CR across bouts, by prey type
   sigSZ_u ~ cauchy(0,2.5); // variation in prey size across bouts, unid prey
   sigHT_u ~ cauchy(0,2.5); // variation in prey HT across bouts, unid prey
+  lgtLM ~ cauchy(0,2.5); // mean logit(lambda), dive success rate, by prey
+  sigLM ~ cauchy(0,2.5);  // variation in logit(lambda), dive success rate  
   sg1 ~ cauchy(0,0.1);
   sg2 ~ cauchy(0,0.1);
   sg3 ~ cauchy(0,0.1);
   sg4 ~ cauchy(0,0.1);
   sg5 ~ cauchy(0,0.1);
+  sg6 ~ cauchy(0,0.5);
 }
 // Section 5. Derived parameters and statistics 
 generated quantities {
@@ -203,6 +222,10 @@ generated quantities {
   real CRgmn[Ngrp] ;
   real ERmn ;
   real ERgmn[Ngrp] ;
+  vector[Km1] LM ;
+  vector[Km1] LMg[Ngrp] ;
+  real LMmn ;
+  real LMgmn[Ngrp] ;
   //real crct ;
   //vcrct = 1 + maxPunid / 20;
   // Mean Size (mm) by prey type (adjust for log-normal)
@@ -217,11 +240,13 @@ generated quantities {
     CR[j] = fmin(100, exp(phi1[j] + phi2[j] * (2.5*log(SZ[j])-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
     // Mean HT/itm, by prey type, adjusted for mean prey size and lognormal dist
     HT[j] = fmin(900, exp(psi1[j] + psi2[j] * (2.5*log(SZ[j])-7) + square(sigHT[j])/2)) ;
+    LM[j] = inv_logit(lgtLM[j]) ;
     Omega[j] = 0 ;
     for(g in 1:Ngrp){
       Omega[j] = Omega[j] + ((1.0 / Ngrp) * OmegaG[g][j]) ;
       CRg[g][j] = fmin(100, exp(phi1G[g][j] + phi2[j] * (2.5*log(SZg[g][j])-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
       HTg[g][j] = fmin(900, exp(psi1G[g][j] + psi2[j] * (2.5*log(SZg[g][j])-7) + square(sigHT[j])/2)) ;
+      LMg[g][j] = inv_logit(lgtLMG[g][j]) ;
     }
   }
   // Mean HT/item for Unid prey:
@@ -234,6 +259,8 @@ generated quantities {
   CRmn = sum(eta .* CR) ;
   // Overall mean Energy Intake Rate (ERmn, kcal.min) given effort allocation: 
   ERmn = sum(eta .* CR .* Cal_dens) ;
+  // Overall mean dive success rate (Lambda)
+  LMmn = sum(eta .* LM) ;
   // Repeat above stats, by group
   for(g in 1:Ngrp){
     HTg_u[g] = exp(psi1G_u[g] + psi2_u * (2.5*log(SZg_u[g])-7) + square(sigHT_u)/2);
@@ -241,5 +268,6 @@ generated quantities {
     PiG[g] = (etaG[g] .* CRg[g]) / sum(etaG[g] .* CRg[g]) ;
     CRgmn[g] = sum(etaG[g] .* CRg[g]) ;
     ERgmn[g] = sum(etaG[g] .* CRg[g] .* Cal_dens) ;
+    LMgmn[g] = sum(etaG[g] .* LMg[g]) ;
   }
 }

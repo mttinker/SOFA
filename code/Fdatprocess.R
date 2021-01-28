@@ -34,8 +34,19 @@ if(length(ii)>0){
   }
 }
 # Remove dives with unknown or other Success codes, create sequential dive numbers 
+dat$Success[dat$Success=="co"] = "c"
 ix = which(dat$Success!="y" & dat$Success!="n" & dat$Success!="c")
 dat = dat[-ix,]
+# Make sure carry-over dives always follow successful dive
+for (i in 2:nrow(dat)){
+  if(dat$Success[i]=="c" & dat$Success[i-1]=="n"){
+    if(is.na(dat$Prey[i])){
+      dat$Success[i]=="n"
+    }else{
+      dat$Success[i]=="y"
+    }
+  }
+}
 dat$SuccessV = numeric(length = nrow(dat))
 dat$SuccessV[which(dat$Success=="y")] = 1
 dat$SuccessV[which(dat$Success=="c")] = 0.5
@@ -49,7 +60,7 @@ ii = which(is.na(dat$Ageclass))
 dat$Ageclass[ii] = "u"
 ii = which(dat$Ageclass!="j" & dat$Ageclass!="sa" & dat$Ageclass!="a" & dat$Ageclass!="aa" & dat$Ageclass!="u")
 dat$Ageclass[ii] = "u"
-# Remove bouts with no observed successful dives
+# Remove bouts with no observed successful dives (or <25% successful) 
 NoDiveSucc = 1
 while(NoDiveSucc>0){
   ix = numeric()
@@ -57,8 +68,9 @@ while(NoDiveSucc>0){
   Nbouts = length(Bouts)
   for (b in 1:Nbouts){
     ii = which(dat$Bout==Bouts[b])
-    Nsucc = sum(dat$SuccessV[ii])
-    if(Nsucc==0){
+    Nsucc = length(which(dat$SuccessV[ii]>0))
+    Nusucc = length(which(dat$SuccessV[ii]==0))
+    if((Nsucc/(Nsucc+Nusucc))<0.25){
       ix = c(ix,ii)
     }
   }
