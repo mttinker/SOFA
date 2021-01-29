@@ -12,6 +12,8 @@ require(rJava)
 require(rChoiceDialogs)
 require(parallel)
 require(rstan)
+library(cmdstanr)
+library(posterior)
 #
 # Create Generic function for stopping script in case of error:
 stop_quietly <- function() {
@@ -195,7 +197,7 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 cores = detectCores()
 ncore = min(20,cores-1)
-Niter = round(nsamples/ncore)+nburnin
+Niter = round(nsamples/ncore)
 #
 if(GrpOpt==0){
 	params <- c("tauB","maxPunid","CRmn","ERmn","LMmn","SZ","SZ_u",
@@ -220,15 +222,9 @@ if (GrpOpt==0){
 }else{
 	fitmodel = "SOFAfit_Grp.stan"
 }
-# Compile model if necessary, or load pre-compiled version if available
-testfile = paste0("./code/",substr(fitmodel ,1,nchar(fitmodel)-5),"_dso.rdata")
-if(file_test("-f", testfile) ==TRUE){
-	load(testfile)
-}else{
-	Stan_model.dso = stan_model(file = paste0("./code/",fitmodel),
-															model_name = substr(fitmodel ,1,nchar(fitmodel)-5))
-	save(Stan_model.dso,file=testfile)
-}
+#
+modfile <- file.path("./code", fitmodel)
+mod <- cmdstan_model(modfile)
 #
 rspnse = dlg_message(c("That completes set-up, the model will now be fit using ",
 											 "Bayesian methods (rstan). Fitting can take several hours, ",
@@ -240,25 +236,38 @@ if(rspnse == "cancel"){
 	stop_quietly()
 }
 #
-suppressWarnings ( 
-	out <- sampling(Stan_model.dso,
-									data = stan.data,    # named list of data
-									pars = params,       # list of params to monitor
-									init = "random",     # initial values     "random", 
-									chains = ncore,         # number of Markov chains
-									warmup = nburnin,       # number of warmup iterations per chain
-									iter = Niter,         # total number of iterations per chain
-									cores = ncore,          # number of cores (if <20, increase iter)
-									refresh = 50        # show progress every 'refresh' iterations
-									#               control = list(adapt_delta = 0.99, max_treedepth = 15)
+suppressMessages(
+	suppressWarnings ( 
+		fit <- mod$sample(
+			data = stan.data,
+			seed = 123,
+			chains = ncore,
+			parallel_chains = ncore,
+			refresh = 100,
+			iter_warmup = nburnin,
+			iter_sampling = Niter
+		)
 	)
-) 
+)
+#
+out <- rstan::read_stan_csv(fit$output_files())
+#
 mcmc <- as.matrix(out)
 vn = colnames(mcmc)
 Nsims = nrow(mcmc)
 sumstats = summary(out)$summary
 vns = row.names(sumstats)
-rm(params,Stan_model.dso,out)
+iivn = numeric()
+iivns= numeric()
+for(i in 1:length(params)){
+	iivn = c(iivn,which(vn == params[i] | startsWith(vn,paste0(params[i],"["))))
+	iivns = c(iivns,which(vns == params[i] | startsWith(vns,paste0(params[i],"["))))
+}
+sumstats = sumstats[iivns,]	
+mcmc = mcmc[,iivn]
+vn = colnames(mcmc)
+vns = row.names(sumstats)
+rm(params,mod,fit,out,iivn,iivns,tmp)
 # save image file of results for post-fit processing and review:
 dir.create(paste0("./projects/",Projectname,"/results"),showWarnings = F)
 #
