@@ -42,8 +42,8 @@ parameters {
   simplex[Km1] eta ;             // mean proportional effort allocation by prey type (if all ID'd)
   real<lower=0> tauB ;           // relative precision of diet composition across bouts
   simplex[K] theta[Nbouts] ;     // vectors of bout-specific prey-allocation probs for multinomial  
-  vector<lower=0>[Km1] muSZ ;    // mean of log(Size_cm) of each prey
-  real<lower=0> muSZ_u ;         // mean of log(Size_cm) of UN-ID
+  vector<lower=0>[Km1] muSZ ;    // mean of log(Size_mm) of each prey
+  real<lower=0> muSZ_u ;         // mean of log(Size_mm) of UN-ID
   vector[Km1] lgtLM ;            // mean logit(lambda) (dive success rate) for each prey
   vector<lower=0>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey 
   vector<lower=0>[Km1] sigHT ;   // stdev of log(HT per item) of each prey 
@@ -65,17 +65,9 @@ parameters {
 transformed parameters {
   vector<lower=0,upper=1>[Km1] Omega ;// prey-specific probability of positive ID
   vector<lower=0>[K] alpha ;        // vector of dirichlet params: relative prey freq (inc. UN-ID)
-  real<lower=0> OV_SZ[Km1] ;        // Overlap of size distribution with unknown prey, by prey type
-  real<lower=0> OV_HT[Km1] ;        // Overlap of HT distribution with unknown prey, by prey type
-  real<lower=0> Dist_SZ[Km1] ;      // Bhattacharyya distance between UnID andeach prey type, for size
-  real<lower=0> Dist_HT[Km1] ;      // Bhattacharyya distance between UnID andeach prey type, for HT
-  vector[NCR] CRate_E;              // Array of expected log prey-specific consumption rates (CR) by bout (g/min)
-  vector[NHt] HTmn_E;               // Array of expected log mean handling times (sec), by prey, by bout   
-  vector[NU[2]] HTmnU_E;            // Array of expected log mean handling times (sec), for UN-ID prey, by bout    
-  vector[NSz] SZmn_E;               // Array of expected log mean prey size vaues (mm) by prey, by bout
-  vector[NU[1]] SZmnU_E;            // Array of expected log mean prey size vaues (mm) for UnID, by bout
   vector[Km1] muHT ;                // mean of log(HT per item) of each prey  
-  real muHT_u ;                     // mean of log(HT per item) of UN-ID     
+  real muHT_u ;                     // mean of log(HT per item) of UN-ID       
+  //
   // Compute mean expected HT at avg size for un-id prey
   muHT_u = psi1_u + psi2_u * (2.5 * muSZ_u - 7);  
   // Loop through prey types, calculate prob of ID-ing prey (Pid) & contribution to un-ID 
@@ -83,26 +75,23 @@ transformed parameters {
   // each prey type and UN-ID prey: if NO overlap then prey does not contribute to un-ID,
   // while if perfect overlap, then prob of Un-ID is at maximum (maxPunid)
   for (j in 1:Km1){
+    real OV_SZ ;        // Overlap of size distribution with unknown prey, by prey type
+    real OV_HT ;        // Overlap of HT distribution with unknown prey, by prey type
+    real Dist_SZ ;      // Bhattacharyya distance between UnID andeach prey type, for size
+    real Dist_HT ;      // Bhattacharyya distance between UnID andeach prey type, for HT
     // Compute mean expected HT at avg size for prey type j:
     muHT[j] = psi1[j] + psi2[j] * (2.5 * muSZ[j] - 7) ;  
-    Dist_SZ[j] = 0.25 * log(0.25 * (sigSZ[j]^2 / sigSZ_u^2 + sigSZ_u^2/sigSZ[j]^2 + 2))
+    Dist_SZ = 0.25 * log(0.25 * (sigSZ[j]^2 / sigSZ_u^2 + sigSZ_u^2/sigSZ[j]^2 + 2))
               + 0.25 * (((muSZ[j] - muSZ_u)^2) / (sigSZ[j]^2 + sigSZ_u^2)) ;
-    OV_SZ[j] = exp(-Dist_SZ[j]) ;
-    Dist_HT[j] = 0.25 * log(0.25 * (sigHT[j]^2 / sigHT_u^2 + sigHT_u^2/sigHT[j]^2 + 2))
+    OV_SZ = exp(-Dist_SZ) ;
+    Dist_HT = 0.25 * log(0.25 * (sigHT[j]^2 / sigHT_u^2 + sigHT_u^2/sigHT[j]^2 + 2))
               + 0.25 * (((muHT[j] - muHT_u)^2) / (sigHT[j]^2 + sigHT_u^2)) ;
-    OV_HT[j] = exp(-Dist_HT[j]) ;    
-    Omega[j] = 1 - maxPunid * (OV_SZ[j] * OV_HT[j]) ;
+    OV_HT = exp(-Dist_HT) ;    
+    Omega[j] = 1 - maxPunid * (OV_SZ * OV_HT) ;
   }  
   // Calculate alpha, the dirichlet params for bout-specific prey allocation probs
   alpha[1:Km1] = eta .* Omega ;
   alpha[K] = sum(eta .* (1 - Omega)) ;
-  // Expected log attributes, given that the log median of means of lognormal samples of size n: 
-  //           mu + (n*sg^2 - sg^2)/(2*n) 
-  CRate_E = (phi1[Cp] + phi2[Cp] .* Csz) + ((Css .* square(sigCR[Cp])) - square(sigCR[Cp])) ./ (2 * Css) ;
-  HTmn_E = (psi1[Hp] + psi2[Hp] .* Hsz) + ((Hss .* square(sigHT[Hp])) - square(sigHT[Hp])) ./ (2 * Hss) ;
-  HTmnU_E = (psi1_u + psi2_u * Hsz_u) + ((Hss_u * square(sigHT_u)) - square(sigHT_u)) ./ (2 * Hss_u) ;
-  SZmn_E = muSZ[Sp] + ((Sss .* square(sigSZ[Sp])) - square(sigSZ[Sp])) ./ (2 * Sss) ;
-  SZmnU_E = muSZ_u + ((Sss_u * square(sigSZ_u)) - square(sigSZ_u)) ./ (2 * Sss_u) ;
 }
 // Section 4. Estimating model parameters (drawing from probability distributions)
 model {
@@ -113,13 +102,20 @@ model {
     EffortP[i,] ~ multinomial(theta[i]) ;
   }
   // Observed consumption rate (g/min) by prey type, random samples
-  CRate ~ lognormal(CRate_E, sigCR[Cp] ./ sqrt(Css) ) ;
+  // NOTE: Expected log attributes, given that the log median of means of lognormal samples of size n: 
+  //           mu + (n*sg^2 - sg^2)/(2*n) 
+  CRate ~ lognormal((phi1[Cp] + phi2[Cp] .* Csz) + ((Css .* square(sigCR[Cp])) - square(sigCR[Cp])) ./ (2 * Css),
+          sigCR[Cp] ./ sqrt(Css) ) ;
   // Observed Handling time (sec), random samples, ID prey & UN-id prey
-  HTmn ~ lognormal(HTmn_E, sigHT[Hp] ./ sqrt(Hss) ) ;
-  HTmnU ~ lognormal(HTmnU_E, sigHT_u ./ sqrt(Hss_u) ) ;  
+  HTmn ~ lognormal((psi1[Hp] + psi2[Hp] .* Hsz) + ((Hss .* square(sigHT[Hp])) - square(sigHT[Hp])) ./ (2 * Hss), 
+          sigHT[Hp] ./ sqrt(Hss) ) ;
+  HTmnU ~ lognormal((psi1_u + psi2_u * Hsz_u) + ((Hss_u * square(sigHT_u)) - square(sigHT_u)) ./ (2 * Hss_u), 
+          sigHT_u ./ sqrt(Hss_u) ) ;  
   // Observed Mean prey size (mm), random samples, ID prey & UN-id prey
-  SZmn ~ lognormal(SZmn_E, sigSZ[Sp] ./ sqrt(Sss) ) ;
-  SZmnU ~ lognormal(SZmnU_E, sigSZ_u ./ sqrt(Sss_u) ) ;
+  SZmn ~ lognormal(muSZ[Sp] + ((Sss .* square(sigSZ[Sp])) - square(sigSZ[Sp])) ./ (2 * Sss), 
+          sigSZ[Sp] ./ sqrt(Sss) ) ;
+  SZmnU ~ lognormal(muSZ_u + ((Sss_u * square(sigSZ_u)) - square(sigSZ_u)) ./ (2 * Sss_u), 
+          sigSZ_u ./ sqrt(Sss_u) ) ;
   // Observed logit(lambda), dive succes rate by bout/prey, random samples 
   LMlg ~ normal(lgtLM[Lp], sigLM[Lp] ./ sqrt(Lss) ) ;
   //
@@ -150,10 +146,8 @@ model {
 generated quantities {
   vector[Km1] SZ ;
   real SZ_u ;
-  // vector[Km1] NI ;
   vector[Km1] HT ;
   real HT_u ;
-  // vector[Km1] LM ;
   vector[Km1] CR ;
   vector[Km1] Pi ;
   vector[Km1] ER ;
@@ -161,8 +155,6 @@ generated quantities {
   real CRmn ;
   real ERmn ;
   real LMmn ;
-  //real crct ;
-  //vcrct = 1 + maxPunid / 20;
   // Mean Size (mm) by prey type (adjust for log-normal)
   SZ = exp(muSZ +  square(sigSZ)/2 );
   SZ_u = exp(muSZ_u +  square(sigSZ_u)/2 );

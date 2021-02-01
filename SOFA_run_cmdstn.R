@@ -11,7 +11,7 @@ require(openxlsx)
 require(rJava) 
 require(rChoiceDialogs)
 require(parallel)
-require(rstan)
+#require(rstan)
 library(cmdstanr)
 library(posterior)
 #
@@ -193,8 +193,8 @@ if(!is.list(stan.data)){
 #
 # Fit Bayesian model ------------------------------------------------------
 #
-options(mc.cores = parallel::detectCores())
-rstan_options(auto_write = TRUE)
+# options(mc.cores = parallel::detectCores())
+# rstan_options(auto_write = TRUE)
 cores = detectCores()
 ncore = min(20,cores-1)
 Niter = round(nsamples/ncore)
@@ -250,24 +250,15 @@ suppressMessages(
 	)
 )
 #
-out <- rstan::read_stan_csv(fit$output_files())
-#
-mcmc <- as.matrix(out)
-vn = colnames(mcmc)
+sumstats = as.data.frame(fit$summary(variables = params,"mean",mcse = mcse_mean,"sd",
+																		 ~quantile(.x, probs = c(0.025, 0.05, 0.5, 0.95, 0.975)),
+																		 N_eff = ess_bulk,"rhat"))
+row.names(sumstats) = sumstats$variable; sumstats = sumstats[,-1] 
+mcmc = as_draws_matrix(fit$draws(variables = params))
+vn = colnames(mcmc); vns = row.names(sumstats)
+paramnames = params
+rm(mod,fit,params)
 Nsims = nrow(mcmc)
-sumstats = summary(out)$summary
-vns = row.names(sumstats)
-iivn = numeric()
-iivns= numeric()
-for(i in 1:length(params)){
-	iivn = c(iivn,which(vn == params[i] | startsWith(vn,paste0(params[i],"["))))
-	iivns = c(iivns,which(vns == params[i] | startsWith(vns,paste0(params[i],"["))))
-}
-sumstats = sumstats[iivns,]	
-mcmc = mcmc[,iivn]
-vn = colnames(mcmc)
-vns = row.names(sumstats)
-rm(params,mod,fit,out,iivn,iivns,tmp)
 # save image file of results for post-fit processing and review:
 dir.create(paste0("./projects/",Projectname,"/results"),showWarnings = F)
 #

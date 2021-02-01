@@ -18,6 +18,7 @@ require(rmarkdown)
 require(gtools)
 require(dplyr)
 require(knitr)
+rm(list = ls())
 # Create Generic function for stopping script in case of error:
 stop_quietly <- function() {
 	opt <- options(show.error.messages = FALSE)

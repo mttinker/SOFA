@@ -52,17 +52,17 @@ parameters {
   real<lower=0> tauB[Ngrp] ;     // relative precision of diet composition across bouts
   real<lower=0> tauG ;           // relative precision of diet composition across groups
   simplex[K] theta[Nbouts] ;     // vectors of bout-specific prey-allocation probs for multinomial  
-  vector<lower=0>[Km1] muSZ ;    // mean of log(Size_cm) of each prey type
-  vector<lower=0>[Km1] muSZG[Ngrp] ;  // mean of log(Size_cm) of each prey type, by group 
-  real<lower=0> muSZ_u ;         // mean of log(Size_cm) of UN-ID
-  real<lower=0> muSZG_u[Ngrp] ;         // mean of log(Size_cm) of UN-ID, by group
+  vector<lower=0>[Km1] muSZ ;    // mean of log(Size_mm) of each prey type
+  vector<lower=0>[Km1] muSZG[Ngrp] ;  // mean of log(Size_mm) of each prey type, by group 
+  real<lower=0> muSZ_u ;         // mean of log(Size_mm) of UN-ID
+  real<lower=0> muSZG_u[Ngrp] ;         // mean of log(Size_mm) of UN-ID, by group
   vector[Km1] lgtLM ;            // mean logit(lambda) (dive success rate) for each prey
   vector[Km1] lgtLMG[Ngrp] ;     // mean logit(lambda) (dive success rate) for each prey, by group
   vector<lower=0>[Km1] sigLM ;   // stdev of logit(lambda) of each prey 
   vector<lower=0>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey 
   vector<lower=0>[Km1] sigHT ;   // stdev of log(HT per item) of each prey 
   vector<lower=0>[Km1] sigCR ;   // stdev of log(HT per item) of each prey 
-  real<lower=0> sigSZ_u ;        // stdev of log(Size_cm) of UN-ID
+  real<lower=0> sigSZ_u ;        // stdev of log(Size_mm) of UN-ID
   real<lower=0> sigHT_u ;        // stdev of log(HT per item) of UN-ID    
   vector<lower=0>[Km1] phi1 ;    // intercept of CRate v Size fxn by prey 
   vector<lower=0>[Km1] phi1G[Ngrp] ;    // intercept of CRate v Size fxn by prey 
@@ -87,12 +87,6 @@ parameters {
 transformed parameters {
   vector<lower=0,upper=1>[Km1] OmegaG[Ngrp] ;// prey-specific probability of positive ID
   vector<lower=0>[K] alpha[Ngrp] ;        // vector of dirichlet params: relative prey freq (inc. UN-ID)
-  vector[NCR] CRate_E;              // Array of expected log prey-specific consumption rates (CR) by bout (g/min)
-  vector[NHt] HTmn_E;               // Array of expected log mean handling times (sec), by prey, by bout   
-  vector[NU[2]] HTmnU_E;            // Array of expected log mean handling times (sec), for UN-ID prey, by bout    
-  vector[NSz] SZmn_E;               // Array of expected log mean prey size vaues (mm) by prey, by bout
-  vector[NU[1]] SZmnU_E;            // Array of expected log mean prey size vaues (mm) for UnID, by bout
-  vector[NLm] lgtLM_E;              // Array of expected logit lambda
   //
   for (g in 1:Ngrp){  
     real muHT_u ;                     // mean of log(HT per item) of UN-ID   
@@ -122,26 +116,6 @@ transformed parameters {
     alpha[g][1:Km1] = etaG[g] .* OmegaG[g] ;
     alpha[g][K] = sum(etaG[g] .* (1 - OmegaG[g])) ;
   }
-  // Expected log attributes, given that the log median of means of lognormal samples of size n: 
-  //           mu + (n*sg^2 - sg^2)/(2*n) 
-  for(i in 1:NCR){
-    CRate_E[i] = (phi1G[Cg[i]][Cp[i]] + phi2[Cp[i]] * Csz[i]) + ((Css[i] * square(sigCR[Cp[i]])) - square(sigCR[Cp[i]])) / (2 * Css[i]) ;
-  }
-  for(i in 1:NHt){
-    HTmn_E[i] = (psi1G[Hg[i]][Hp[i]] + psi2[Hp[i]] * Hsz[i]) + ((Hss[i] * square(sigHT[Hp[i]])) - square(sigHT[Hp[i]])) / (2 * Hss[i]) ;
-  }
-  for(i in 1:NU[2]){
-    HTmnU_E[i] = (psi1G_u[Hg_u[i]] + psi2_u * Hsz_u[i]) + ((Hss_u[i] * square(sigHT_u)) - square(sigHT_u)) / (2 * Hss_u[i]) ;
-  }
-  for(i in 1:NSz){
-    SZmn_E[i] = muSZG[Sg[i]][Sp[i]] + ((Sss[i] * square(sigSZ[Sp[i]])) - square(sigSZ[Sp[i]])) / (2 * Sss[i]) ;
-  }  
-  for(i in 1:NU[1]){
-    SZmnU_E[i] = muSZG_u[Sg_u[i]] + ((Sss_u[i] * square(sigSZ_u)) - square(sigSZ_u)) / (2 * Sss_u[i]) ;
-  }
-  for(i in 1:NLm){
-    lgtLM_E[i] = lgtLMG[Lg[i]][Lp[i]] ;
-  }
 }
 // Section 4. Estimating model parameters (drawing from probability distributions)
 model {
@@ -152,15 +126,34 @@ model {
     EffortP[i,] ~ multinomial(theta[i]) ;
   }
   // Observed consumption rate (g/min) by prey type, random samples
-  CRate ~ lognormal(CRate_E, sigCR[Cp] ./ sqrt(Css) ) ;
+  // NOTE: Expected log attributes, given that the log median of means of lognormal samples of size n: 
+  //           mu + (n*sg^2 - sg^2)/(2*n) 
+  for(i in 1:NCR){
+    CRate[i] ~ lognormal((phi1G[Cg[i]][Cp[i]] + phi2[Cp[i]] * Csz[i]) + ((Css[i] * square(sigCR[Cp[i]])) - square(sigCR[Cp[i]])) / (2 * Css[i]),
+            sigCR[Cp[i]] / sqrt(Css[i]) ) ;
+  }
   // Observed Handling time (sec), random samples, ID prey & UN-id prey
-  HTmn ~ lognormal(HTmn_E, sigHT[Hp] ./ sqrt(Hss) ) ;
-  HTmnU ~ lognormal(HTmnU_E, sigHT_u ./ sqrt(Hss_u) ) ;  
+  for(i in 1:NHt){
+    HTmn[i] ~ lognormal( (psi1G[Hg[i]][Hp[i]] + psi2[Hp[i]] * Hsz[i]) + ((Hss[i] * square(sigHT[Hp[i]])) - square(sigHT[Hp[i]])) / (2 * Hss[i]),
+              sigHT[Hp[i]] / sqrt(Hss[i]) ) ;
+  }
+  for(i in 1:NU[2]){
+    HTmnU ~ lognormal((psi1G_u[Hg_u[i]] + psi2_u * Hsz_u[i]) + ((Hss_u[i] * square(sigHT_u)) - square(sigHT_u)) / (2 * Hss_u[i]),
+            sigHT_u / sqrt(Hss_u[i]) ) ;  
+  }
   // Observed Mean prey size (mm), random samples, ID prey & UN-id prey
-  SZmn ~ lognormal(SZmn_E, sigSZ[Sp] ./ sqrt(Sss) ) ;
-  SZmnU ~ lognormal(SZmnU_E, sigSZ_u ./ sqrt(Sss_u) ) ;
+  for(i in 1:NSz){
+    SZmn[i] ~ lognormal(muSZG[Sg[i]][Sp[i]] + ((Sss[i] * square(sigSZ[Sp[i]])) - square(sigSZ[Sp[i]])) / (2 * Sss[i]), 
+              sigSZ[Sp[i]] / sqrt(Sss[i]) ) ;
+  }  
+  for(i in 1:NU[1]){
+    SZmnU[i] ~ lognormal(muSZG_u[Sg_u[i]] + ((Sss_u[i] * square(sigSZ_u)) - square(sigSZ_u)) / (2 * Sss_u[i]), 
+            sigSZ_u / sqrt(Sss_u[i]) ) ;
+  }
   // Observed logit(lambda), dive succes rate by bout/prey, random samples 
-  LMlg ~ normal(lgtLM_E, sigLM[Lp] ./ sqrt(Lss) ) ;  
+  for(i in 1:NLm){
+    LMlg[i] ~ normal(lgtLMG[Lg[i]][Lp[i]], sigLM[Lp[i]] / sqrt(Lss[i]) ) ; 
+  }
   //  
   // B) Prior distributions for model parameters:
   Cal_dens ~ normal(Cal_dns_mn,Cal_dns_sg) ; // Caloric density (incorporates est. uncertainty)
@@ -206,12 +199,10 @@ generated quantities {
   vector[Km1] SZg[Ngrp] ;
   real SZ_u ;
   real SZg_u[Ngrp] ;
-  // vector[Km1] NI ;
   vector[Km1] HT ;
   vector[Km1] HTg[Ngrp] ;
   real HT_u ;
   real HTg_u[Ngrp] ;
-  // vector[Km1] LM ;
   vector[Km1] CR ;
   vector[Km1] CRg[Ngrp] ;
   vector[Km1] Pi ;
@@ -226,8 +217,6 @@ generated quantities {
   vector[Km1] LMg[Ngrp] ;
   real LMmn ;
   real LMgmn[Ngrp] ;
-  //real crct ;
-  //vcrct = 1 + maxPunid / 20;
   // Mean Size (mm) by prey type (adjust for log-normal)
   SZ = exp(muSZ +  square(sigSZ)/2 );
   SZ_u = exp(muSZ_u +  square(sigSZ_u)/2 );

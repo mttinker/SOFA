@@ -258,6 +258,7 @@ vn = colnames(mcmc)
 Nsims = nrow(mcmc)
 sumstats = summary(out)$summary
 vns = row.names(sumstats)
+paramnames = params
 rm(params,Stan_model.dso,out)
 # save image file of results for post-fit processing and review:
 dir.create(paste0("./projects/",Projectname,"/results"),showWarnings = F)
