@@ -204,7 +204,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   LMlg = numeric(); Lp = numeric(); Lss = numeric(); Lg = numeric()
   CRate = numeric(); Cp = numeric(); Csz = numeric(); Css = numeric(); Cg = numeric()
   eta_prior = numeric()
-  MaxSS = 100
+  MaxSS = max(50,round(150/Ngrp))
   Nprcaps = length(which(Fdat$PreyV>0 & Fdat$PreyV<NPtypes))
   # Cap Crate at 250
   for (p in 1:(NPtypes-1)){
@@ -215,7 +215,11 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     ii = which(SmnP_n[,p] >= MnN1)
     if(length(ii)<6){ii = which(SmnP_n[,p] > 0)}
     if(length(ii)>0){
-      ii = ii[order(SmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
+      iii = numeric()
+      for (g in 1:Ngrp){
+        iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+      }
+      ii = iii
       SZmn = c(SZmn,(SmnP[ii,p])); Sp = c(Sp,rep(p,length(ii)));  Sss = c(Sss,SmnP_n[ii,p])
       Sg = c(Sg,GrpBt[ii])
     }
@@ -223,7 +227,11 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     ii = which(HTmnP_n[,p] >= MnN1 & SmnP_n[,p] > 0)
     if(length(ii)<6){ii = which(HTmnP_n[,p] > 0 & SmnP_n[,p] > 0)}
     if(length(ii)>0){
-      ii = ii[order(HTmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
+      iii = numeric()
+      for (g in 1:Ngrp){
+        iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+      }
+      ii = iii
       HTmn = c(HTmn,(HTmnP[ii,p])); Hp = c(Hp,rep(p,length(ii)))
       Hsz = c(Hsz,2.5*log(SmnP[ii,p])-7); Hss = c(Hss,HTmnP_n[ii,p])
       Hg = c(Hg,GrpBt[ii])
@@ -232,7 +240,11 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     ii = which(NmnP_n[,p] >= MnN1)
     if(length(ii)<6){ii = which(NmnP_n[,p] > 0)}
     if(length(ii)>0){
-      ii = ii[order(NmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
+      iii = numeric()
+      for (g in 1:Ngrp){
+        iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+      }
+      ii = iii
       NImn = c(NImn,(NmnP[ii,p])); Np = c(Np,rep(p,length(ii))); Nss = c(Nss,NmnP_n[ii,p])
       Ng = c(Ng,GrpBt[ii]) 
     }
@@ -240,7 +252,11 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     ii = which(LMDmnP_n[,p] >= MnN1)
     if(length(ii)==0){ii = which(LMDmnP_n[,p] > 0)}
     if(length(ii)>0){    
-      ii = ii[order(LMDmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
+      iii = numeric()
+      for (g in 1:Ngrp){
+        iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+      }
+      ii = iii
       LMlg = c(LMlg,logit(pmin(0.99,LMDmnP[ii,p]))); Lp = c(Lp,rep(p,length(ii))) ; Lss = c(Lss,LMDmnP_n[ii,p]) 
       Lg = c(Lg,GrpBt[ii]) 
     }
@@ -248,7 +264,11 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     ii = which(CRmnP_n[,p] >= MnN1)
     if(length(ii)<6){ii = which(CRmnP_n[,p] > 0)}
     if(length(ii)>0){    
-      ii = ii[order(CRmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
+      iii = numeric()
+      for (g in 1:Ngrp){
+        iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+      }
+      ii = iii
       CRate = c(CRate,pmin(250,CRmnP[ii,p])); Cp = c(Cp,rep(p,length(ii)))      
       Csz = c(Csz,2.5*log(SmnP[ii,p])-7) ; Css = c(Css,CRmnP_n[ii,p])
       Cg = c(Cg,GrpBt[ii]) 
@@ -259,31 +279,47 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   ii = which(SmnP_n[,p] >= MnN1)
   if(length(ii)<6){ii = which(SmnP_n[,p] > 0)}
   if(length(ii)>0){ 
-  ii = ii[order(SmnP_n[ii,p], decreasing = T)][1:min(5*MaxSS,length(ii))]
-  SZmnU = (SmnP[ii,p]); Sss_u = SmnP_n[ii,p]; 
-  Sg_u = GrpBt[ii]
+    iii = numeric()
+    for (g in 1:Ngrp){
+      iii = c(iii,sample(ii[GrpBt[ii]==g],min(5*MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+    }
+    ii = iii
+    SZmnU = (SmnP[ii,p]); Sss_u = SmnP_n[ii,p]; 
+    Sg_u = GrpBt[ii]
   }
   ii = which(NmnP_n[,p] >= MnN1 )
   if(length(ii)<6){ii = which(NmnP_n[,p] > 0)}
   if(length(ii)>0){   
-  ii = ii[order(NmnP_n[ii,p], decreasing = T)][1:min(5*MaxSS,length(ii))]
-  NImnU = (NmnP[ii,p]); Nss_u = NmnP_n[ii,p]
-  Ng_u = GrpBt[ii]
+    iii = numeric()
+    for (g in 1:Ngrp){
+      iii = c(iii,sample(ii[GrpBt[ii]==g],min(5*MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+    }
+    ii = iii
+    NImnU = (NmnP[ii,p]); Nss_u = NmnP_n[ii,p]
+    Ng_u = GrpBt[ii]
   }
   ii = which(HTmnP_n[,p] >= MnN1 & SmnP_n[,p] > 0)
   if(length(ii)<6){ii = which(HTmnP_n[,p] > 0 & SmnP_n[,p] > 0)}
   if(length(ii)>0){     
-  ii = ii[order(HTmnP_n[ii,p], decreasing = T)][1:min(5*MaxSS,length(ii))]
-  HTmnU = (HTmnP[ii,p]); Hss_u = HTmnP_n[ii,p]
-  Hsz_u = 2.5*log(SmnP[ii,p])-7
-  Hg_u = GrpBt[ii]
+    iii = numeric()
+    for (g in 1:Ngrp){
+      iii = c(iii,sample(ii[GrpBt[ii]==g],min(5*MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+    }
+    ii = iii
+    HTmnU = (HTmnP[ii,p]); Hss_u = HTmnP_n[ii,p]
+    Hsz_u = 2.5*log(SmnP[ii,p])-7
+    Hg_u = GrpBt[ii]
   }
   ii = which(LMDmnP_n[,p] >= MnN1)
   if(length(ii)<6){ii = which(LMDmnP_n[,p] > 0)}
   if(length(ii)>0){   
-  ii = ii[order(LMDmnP_n[ii,p], decreasing = T)][1:min(MaxSS,length(ii))]
-  LMlgU = logit(pmin(0.99,LMDmnP[ii,p])); Lss_u = LMDmnP_n[ii,p]
-  Lg_u = GrpBt[ii]
+    iii = numeric()
+    for (g in 1:Ngrp){
+      iii = c(iii,sample(ii[GrpBt[ii]==g],min(5*MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+    }
+    ii = iii
+    LMlgU = logit(pmin(0.99,LMDmnP[ii,p])); Lss_u = LMDmnP_n[ii,p]
+    Lg_u = GrpBt[ii]
   }
   NU = numeric()
   NU[1] = length(SZmnU);  NU[2] = length(HTmnU); # NU[3] = length(NImnU);NU[4] = length(LMlgU);
