@@ -65,6 +65,14 @@ if(length(!is.na(dfPr$PreyType))<length(!is.na(dfPr$PreyCode))){
 								"please go back and edit. Stopping program."))
 	stop_quietly()
 }
+# Check if file exists to adjust size of specific prey for specific group variable levels
+if(file.exists(paste0("./projects/",Projectname,"/Adjust_size_group.xlsx"))){
+	Adj_Sz_grp = 1
+	dfSzAd = read_excel(paste0("./projects/",Projectname,"/Adjust_size_group.xlsx"))
+}else{
+	Adj_Sz_grp = 0
+	dfSzAd = numeric()
+}
 # Make the last prey type UNID:
 Nptps = max(dfPtp$TypeN); dfPtp = rbind(dfPtp[2:nrow(dfPtp),],dfPtp[1,])
 dfPtp$TypeN[nrow(dfPtp)] = Nptps + 1
@@ -111,7 +119,7 @@ if (SBST==1){
 }
 #
 source("./code/Fdatprocess.R")
-rslt = try(suppressWarnings ( Fdatprocess(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,dfE,dfElst)))
+rslt = try(suppressWarnings ( Fdatprocess(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,dfE,dfElst,Adj_Sz_grp,dfSzAd)))
 if(!is.list(rslt)){
 	errtxt = dlg_message(c("An error occured in data processing. This is likely due to a ",
 												"formatting error in either the raw data or Prey_Key spreadsheet.",

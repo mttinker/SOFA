@@ -1,4 +1,4 @@
-Fdatprocess <- function(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,dfE,dfElst){
+Fdatprocess <- function(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,dfE,dfElst,Adj_Sz_grp,dfSzAd){
 # Data pre-processing prior to SOFA forage analysis:
 require(dplyr)
 require(stats)
@@ -158,6 +158,17 @@ dat$PreyT = PreyT
 tmp = merge(cbind(dat$PreyT,seq(1,Nobs)),dfPtp[,c(2,1)],by=c(1,1),sort=F,all.x=T)
 tmp = tmp[order(as.numeric(tmp$V2)),]
 dat$PreyV = tmp$TypeN
+# NOTE: allow for user over-ride adjustment of size for particular prey and group
+if(Adj_Sz_grp==1){
+  n_sz_ch = nrow(dfSzAd)
+  for(i in 1:n_sz_ch){
+    iicol = which(colnames(dat)==dfSzAd$Groupvar[i])
+    ii = which(dat[,iicol]==as.character(dfSzAd$Value[i]) & dat$PreyT==dfSzAd$PreyType[i])
+    if(length(ii)>0){
+      dat$Sz_mm[ii] = dfSzAd$Adjust_fact[i] * dat$Sz_mm[ii]
+    }
+  }
+}
 # fill in missing DT and ST with appropriate mean values
 Tmtag = rep(0,Nobs)
 zz = which(is.na(dat$DT))
