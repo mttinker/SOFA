@@ -10,18 +10,18 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   NmnP = matrix(NA,nrow = Nbouts,ncol = NPtypes)
   HTmnP = matrix(NA,nrow = Nbouts,ncol = NPtypes)
   LMDmnP = matrix(NA,nrow = Nbouts,ncol = NPtypes)
-  
   CRmnP_n = matrix(NA,nrow = Nbouts,ncol = NPtypes)
   SmnP_n = matrix(NA,nrow = Nbouts,ncol = NPtypes)
   NmnP_n = matrix(NA,nrow = Nbouts,ncol = NPtypes)
   HTmnP_n = matrix(NA,nrow = Nbouts,ncol = NPtypes)
   LMDmnP_n = matrix(NA,nrow = Nbouts,ncol = NPtypes)
-  
   # Note: to allocate time, need to account for unsucc, carry over and mult items per dive
   for (b in 1:Nbouts){
     ii = which(Fdat$BoutN==b) 
     FD = Fdat[ii,]
     FD$HTT = numeric(length = nrow(FD))
+    FD$Preynum = rep(NA,nrow(FD))
+    FD$Preynum[which(FD$SuccessV>0)] = 0
     Ndv = max(FD$DiveN)
     STpr = matrix(0,nrow = Ndv,ncol = NPtypes)
     DTpr = matrix(0,nrow = Ndv,ncol = NPtypes)
@@ -32,6 +32,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     for (i in 1:Ndv){
       ii = which(FD$DiveN==i)
       if(FD$SuccessV[ii][1]==1){
+        FD$Preynum[ii][1]==1
         if(length(ii)>1){
           HTmlt = FD$HT[ii]
           NSU = FD$Nszunits[ii]
@@ -107,6 +108,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
           }
         }
       }else if(FD$SuccessV[ii][1]==0.5){
+        FD$Preynum[ii][1]==1
         if (FD$DiveN[ii][1]==1){
           STun[i] = FD$ST[ii[1]]
           DTun[i] = FD$DT[ii[1]]
@@ -119,17 +121,36 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
         }
         while(succPrev<1){
           gobak = gobak + 1
-          succPrev = FD$SuccessV[ii[1]-gobak]
+          iipr = which(FD$DiveN==(i-gobak))
+          succPrev = FD$SuccessV[iipr[1]]
           if (succPrev == 1){
-            FD$HT[ii[1]-gobak] = FD$HT[ii[1]-gobak] + FD$ST[ii[1]]
-            FD$HTT[ii[1]-gobak] = FD$HTT[ii[1]-gobak] + FD$ST[ii[1]] + FD$DT[ii[1]]
-            FD$HT[ii[1]] = NA
-            FD$HTT[ii[1]] = NA
-            FD$N_items[ii[1]-gobak] = ceiling(FD$N_items[ii[1]-gobak])
-            FD$Ncrct[ii[1]-gobak] = ceiling(FD$Ncrct[ii[1]-gobak])
-            Prtyp = FD$PreyV[ii[1]-gobak]
-            STpr[FD$DiveN[ii[1]-gobak], Prtyp] = STpr[FD$DiveN[ii[1]-gobak], Prtyp] + FD$ST[ii[1]]
-            DTpr[FD$DiveN[ii[1]-gobak], Prtyp] = DTpr[FD$DiveN[ii[1]-gobak], Prtyp] + FD$DT[ii[1]]
+            for(j in 1:length(ii)){
+              matchprey = 0
+              if(is.na(FD$PreyV[ii[j]])){
+                FD$PreyV[ii[j]] = FD$PreyV[iipr[length(iipr)]]
+              }
+              for(k in 1:length(iipr)){
+                if (FD$PreyV[ii[j]]==FD$PreyV[iipr[k]]){
+                  matchprey = 1
+                  Prtyp = FD$PreyV[iipr[k]]
+                  FD$HT[iipr[k]] = FD$HT[iipr[k]] + FD$ST[ii[j]]/length(ii)
+                  FD$HTT[iipr[k]] = FD$HTT[iipr[k]] + FD$ST[ii[j]] + FD$DT[ii[j]]/length(ii)
+                  FD$HT[ii[j]] = NA
+                  FD$HTT[ii[j]] = NA
+                  FD$N_items[iipr[k]] = ceiling(FD$N_items[iipr[k]])
+                  FD$Ncrct[iipr[k]] = ceiling(FD$Ncrct[iipr[k]])
+                  STpr[(i-gobak), Prtyp] = STpr[(i-gobak), Prtyp] + FD$ST[ii[j]]/length(ii)
+                  DTpr[(i-gobak), Prtyp] = DTpr[(i-gobak), Prtyp] + FD$DT[ii[j]]/length(ii)
+                }
+              }
+              if (matchprey == 0){
+                Prtyp = FD$PreyV[ii[j]]
+                FD$HT[ii[j]] = NA
+                FD$HTT[ii[j]] = NA
+                STpr[i, Prtyp] = STpr[i, Prtyp] + FD$ST[ii[j]]/length(ii)
+                DTpr[i, Prtyp] = DTpr[i, Prtyp] + FD$DT[ii[j]]/length(ii)
+              }
+            }
           }else if(succPrev < 1 & FD$DiveN[ii[1]-gobak]==1){
             STun[i] = FD$ST[ii[1]]
             DTun[i] = FD$DT[ii[1]]
@@ -176,7 +197,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>0){
         HTmnP[b,p] = mean(FD$HT[ii]/FD$Ncrct[ii])
       }
-      # Mean CR by prey (and sample size) ** NOTE: also select on Eflag==0
+      # Mean CR by prey (and sample size) ** NOTE: also select on Tmtag==0
       ii = which(FD$SuccessV==1 & FD$PreyV==p & FD$Mass_est>0 & FD$HTT>0 & FD$Tmtag ==0)
       CRmnP_n[b,p] = length(ii)
       if(length(ii)>0){

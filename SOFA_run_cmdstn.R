@@ -252,13 +252,14 @@ suppressMessages(
 #
 sumstats = as.data.frame(fit$summary(variables = params,"mean",mcse = mcse_mean,"sd",
 																		 ~quantile(.x, probs = c(0.025, 0.05, 0.5, 0.95, 0.975)),
-																		 N_eff = ess_bulk,"rhat"))
+																		 N_eff = ess_bulk, "rhat"))
 row.names(sumstats) = sumstats$variable; sumstats = sumstats[,-1] 
 mcmc = as_draws_matrix(fit$draws(variables = params))
 vn = colnames(mcmc); vns = row.names(sumstats)
 paramnames = params
-rm(mod,fit,params)
 Nsims = nrow(mcmc)
+rm(mod,fit,params)
+
 # save image file of results for post-fit processing and review:
 dir.create(paste0("./projects/",Projectname,"/results"),showWarnings = F)
 #

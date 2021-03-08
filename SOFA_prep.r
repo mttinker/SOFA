@@ -96,6 +96,7 @@ if(length(files)>0){
 		file.remove(file.path(paste0("./projects/",Projectname),files))
 	}
 }
+dat = dat[order(dat$Bout,dat$Subbout,dat$Divenum,dat$Success,dat$Prey,dat$Size),]
 # Write data file to specified project directory:
 write.xlsx(dat,file=paste0("./projects/",Projectname,"/Forage_dat.xlsx"))
 # Copy other helper files to directory, 
