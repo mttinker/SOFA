@@ -72,11 +72,13 @@ if(rspnse == "cancel"){
 	stop_quietly()
 }
 vers = read.csv("./code/Version.csv"); vers = vers$Version
-title = paste0("~~~ Sea otter foraging analysis (SOFA) ",vers," ~~~ ", "Project: ", Projectname)
+title = paste0("~~~ Sea otter foraging analysis (SOFA) ",vers," ~~~ ")
+subtitle = paste0("Project: ", Projectname, ", Results file: ",rdata_file)
 Daterun = Sys.Date()
 render("./code/SOFA_summary.Rmd",
 			 output_dir = paste0("./projects/",Projectname),
 			 output_file = "SOFA_summary.html",
-			 params = list(rep_title = title, rep_date = Daterun, show.grptxt = Grp_TF,
+			 params = list(rep_title = title, rep_subtitle = subtitle, 
+			 							rep_date = Daterun, show.grptxt = Grp_TF,
 			 							GL1 = GL1, GL2=GL2, GL3=GL3)) # 
 dlg_message(c("The results can be viewed by opening 'SOFA_summary.html' in the projecy folder"), "ok")
