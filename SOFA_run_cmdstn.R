@@ -204,7 +204,7 @@ if(!is.list(stan.data)){
 # options(mc.cores = parallel::detectCores())
 # rstan_options(auto_write = TRUE)
 cores = detectCores()
-ncore = min(20,cores-1)
+ncore = max(3,min(40,cores-4))
 Niter = round(nsamples/ncore)
 #
 if(GrpOpt==0){
