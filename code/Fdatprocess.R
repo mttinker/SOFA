@@ -84,29 +84,37 @@ for(b in 1:Nbouts){
 }
 dat = merge(dat,dvlst,by=c("Date","Bout","Subbout","Divenum"),sort=F)
 #
-Boutlist = dat %>% group_by(BoutN,Bout,Date,Area,Site,Period,
-                            Sex,Ageclass,Ottername,Pup) %>% 
-            summarize(Ndv = max(DiveN),
-            NdvSucc = sum(SuccessV/Npr))
+Boutlist = dat %>% group_by(BoutN,Bout) %>% 
+            summarize(Date = min(Date),
+                      Area = first(Area),
+                      Site = first(Site),
+                      Period = first(Period),
+                      Sex = first(Sex),
+                      Ageclass = first(Ageclass),
+                      Ottername = first(Ottername),
+                      Pup = first(Pup),
+                      Ndv = max(DiveN),
+                      NdvSucc = sum(SuccessV/Npr))
 # Check for and account for duplicated bouts in Boutlist table
 # caused by errors in the various attribute fields (Sex, Ageclass, etc.)
-id = which(duplicated(Boutlist$BoutN)==T)
-if(length(id)>0){
-  for(i in 1:length(id)){
-    ii = id[i]
-    chk = 0
-    while(chk==0){
-      ip = ii-1
-      ic = which(id == ip)
-      if(length(ic)==0){
-        chk=1
-      }
-    }
-    Boutlist$Ndv[ip] =  Boutlist$Ndv[ip] + Boutlist$Ndv[ii]
-    Boutlist$NdvSucc[ip] =  Boutlist$NdvSucc[ip] + Boutlist$NdvSucc[ii]
-  }
-  Boutlist = Boutlist[-id,]
-}
+# id = unique(c(which(duplicated(Boutlist$BoutN,fromLast = TRUE)==T),
+#             which(duplicated(Boutlist$BoutN)==T)))
+# if(length(id)>0){
+#   for(i in 1:length(id)){
+#     ii = id[i]
+#     chk = 0
+#     while(chk==0){
+#       ip = ii-1
+#       ic = which(id == ip)
+#       if(length(ic)==0){
+#         chk=1
+#       }
+#     }
+#     Boutlist$Ndv[ip] =  Boutlist$Ndv[ip] + Boutlist$Ndv[ii]
+#     Boutlist$NdvSucc[ip] =  Boutlist$NdvSucc[ip] + Boutlist$NdvSucc[ii]
+#   }
+#   Boutlist = Boutlist[-id,]
+# }
 # Create Sz_cm field, accounting for prey sizeclass and Qualifier and paw Size
 # 1. Sizequal field for Size class
 Sizequal = paste0( as.character(dat$Size),

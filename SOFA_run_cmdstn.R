@@ -14,6 +14,7 @@ require(parallel)
 #require(rstan)
 library(cmdstanr)
 library(posterior)
+rstan::rstan_options(javascript=FALSE)
 #
 # Create Generic function for stopping script in case of error:
 stop_quietly <- function() {
@@ -204,7 +205,7 @@ if(!is.list(stan.data)){
 # options(mc.cores = parallel::detectCores())
 # rstan_options(auto_write = TRUE)
 cores = detectCores()
-ncore = max(3,min(40,cores-4))
+ncore = max(3,min(20,cores-4))
 Niter = round(nsamples/ncore)
 #
 if(GrpOpt==0){
