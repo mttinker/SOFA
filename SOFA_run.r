@@ -42,7 +42,7 @@ Sys.sleep(.5)
 MnN1 = as.numeric(dlg_input(message = "Min dives/bout for estimating prey attributes", 
 														default = 3)$res)
 MnN2 = as.numeric(dlg_input(message = "Min dives/bout for estimating effort allocation", 
-														default = 2)$res)
+														default = 5)$res)
 nsamples = as.numeric(dlg_input(message = "Number posterior samples from Bayesian fitting", 
 														default = 10000)$res)
 nburnin = as.numeric(dlg_input(message = "Number of burn-in samples for Bayesian fitting", 

@@ -117,6 +117,21 @@ if (SBST==1){
 		iis = c(iis,ii)
 	}
 	dat = dat[iis,]
+	slctvars = c("Area", "Site", "Period", "Sex", "Ageclass", "Ottername", "Pup")
+	# Note: determine which of these potential selection variables has enough levels
+	ix = numeric()
+	for (i in 1:length(slctvars)){
+		if(slctvars[i]==slctvar){
+			ix = c(ix,i)
+		}else{
+			col = which(colnames(dat)==slctvars[i])
+			lvls = as.matrix(table(dat[,col]))
+			if(length(lvls[which(lvls[,1]>100),1])<2){
+				ix = c(ix,i)
+			} 
+		}
+	}
+	slctvars = slctvars[-ix]
 }
 #
 source("./code/Fdatprocess.R")
@@ -143,31 +158,28 @@ if (rspns=="yes"){
 				plot(exp(ft$model$x),exp(ft$model$y),main=dfPr$Description[pr],
 						 xlab="size (mm)",ylab="mass (g)")
 				lines(exp(ft$prdct$x),exp(ft$prdct$ypred),col="red")
+				# exp(ft$coefficients[1] + ft$coefficients[2]*log(44.23413))
 			}
 		}
 	}
 }
 #  Allow user to set by-groups for analysis based on grouping variables
-if (SBST == 0){
-	rspns = dlg_message(c("You also have the option of setting 'by-groups' for analysis: ",
-												"this means that one or more categorical variables are used to ", 
-												"divide the data into groups, and stats will be generated ",
-												"for each group level."), "ok")$res
-	rspns = dlg_message(c("Do you wish to analayze data by group, with the by-group",
-												"levels determined by one or more categorical variables?"), "yesno")$res
-	if (rspns=="no"){
-		GrpOpt = 0
-	}else{
-		GrpOpt = 1
-	}
-	if(GrpOpt==1){
-		Grpvar = rselect.list(slctvars, preselect = NULL, multiple = TRUE,
-												 title = "Which variables?",
-												 graphics = getOption("menu.graphics"))
-		Ngrpvar = length(Grpvar)
-	}
+rspns = dlg_message(c("You also have the option of setting 'by-groups' for analysis: ",
+											"this means that one or more categorical variables are used to ", 
+											"divide the data into groups, and stats will be generated ",
+											"for each group level."), "ok")$res
+rspns = dlg_message(c("Do you wish to analayze data by group, with the by-group",
+											"levels determined by one or more categorical variables?"), "yesno")$res
+if (rspns=="no"){
+	GrpOpt = 0
 }else{
-	GrpOpt=0
+	GrpOpt = 1
+}
+if(GrpOpt==1){
+	Grpvar = rselect.list(slctvars, preselect = NULL, multiple = TRUE,
+												title = "Which variables?",
+												graphics = getOption("menu.graphics"))
+	Ngrpvar = length(Grpvar)
 }
 # Determine group ID for each bout, if GrpOpt = 1
 if(GrpOpt==0){
@@ -255,6 +267,8 @@ suppressMessages(
 			refresh = 100,
 			iter_warmup = nburnin,
 			iter_sampling = Niter
+			# max_treedepth = 14,
+			# adapt_delta = 0.9,
 		)
 	)
 )
@@ -285,8 +299,13 @@ if (GrpOpt==0){
 											format(Sys.time(), "%Y_%b_%d_%H"),"hr.rdata"))
 	}
 }else{
-	save.image(paste0("./projects/",Projectname,"/results/Rslt_Grp_", 
-										format(Sys.time(), "%Y_%b_%d_%H"),"hr.rdata"))
+	if (SBST==1){
+		save.image(paste0("./projects/",Projectname,"/results/Rslt_",slctvardef,"_Grp-",Grpvar,"_", 
+											format(Sys.time(), "%Y_%b_%d_%H"),"hr.rdata"))
+	}else{
+		save.image(paste0("./projects/",Projectname,"/results/Rslt_Grp-",Grpvar,"_", 
+											format(Sys.time(), "%Y_%b_%d_%H"),"hr.rdata"))
+	}
 }
 fintxt = c("That completes model fitting, check psrf values and other diagnostics. ",
 					 "The results have been saved to the 'results' sub-folder of the project. ",

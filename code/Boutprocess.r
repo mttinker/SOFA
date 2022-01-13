@@ -108,7 +108,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
           }
         }
       }else if(FD$SuccessV[ii][1]==0.5){
-        FD$Preynum[ii][1]==1
+        FD$Preynum[ii][1]=1
         if (FD$DiveN[ii][1]==1){
           STun[i] = FD$ST[ii[1]]
           DTun[i] = FD$DT[ii[1]]
@@ -127,10 +127,16 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
             for(j in 1:length(ii)){
               matchprey = 0
               if(is.na(FD$PreyV[ii[j]])){
-                FD$PreyV[ii[j]] = FD$PreyV[iipr[length(iipr)]]
+              	iiprv = which(!is.na(FD$PreyV[iipr]))
+              	if (length(iiprv)>0){
+              		FD$PreyV[ii[j]] = FD$PreyV[iipr[iiprv[1]]]
+              	}
               }
-              for(k in 1:length(iipr)){
-                if (FD$PreyV[ii[j]]==FD$PreyV[iipr[k]]){
+              k = 0
+              while(k<length(iipr)){
+              	k = k + 1
+                if (!is.na(FD$PreyV[ii[j]]) & !is.na(FD$PreyV[iipr[k]]) & 
+                		FD$PreyV[ii[j]]==FD$PreyV[iipr[k]]){
                   matchprey = 1
                   Prtyp = FD$PreyV[iipr[k]]
                   FD$HT[iipr[k]] = FD$HT[iipr[k]] + FD$ST[ii[j]]/length(ii)
@@ -141,14 +147,20 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
                   FD$Ncrct[iipr[k]] = ceiling(FD$Ncrct[iipr[k]])
                   STpr[(i-gobak), Prtyp] = STpr[(i-gobak), Prtyp] + FD$ST[ii[j]]/length(ii)
                   DTpr[(i-gobak), Prtyp] = DTpr[(i-gobak), Prtyp] + FD$DT[ii[j]]/length(ii)
+                  k = length(iipr)
                 }
               }
               if (matchprey == 0){
-                Prtyp = FD$PreyV[ii[j]]
-                FD$HT[ii[j]] = NA
-                FD$HTT[ii[j]] = NA
-                STpr[i, Prtyp] = STpr[i, Prtyp] + FD$ST[ii[j]]/length(ii)
-                DTpr[i, Prtyp] = DTpr[i, Prtyp] + FD$DT[ii[j]]/length(ii)
+              	if(!is.na(FD$PreyV[ii[j]])){
+              		Prtyp = FD$PreyV[ii[j]]
+              		FD$HT[ii[j]] = NA
+              		FD$HTT[ii[j]] = NA
+              		STpr[i, Prtyp] = STpr[i, Prtyp] + FD$ST[ii[j]]/length(ii)
+              		DTpr[i, Prtyp] = DTpr[i, Prtyp] + FD$DT[ii[j]]/length(ii)
+              	}else{
+              		FD$HT[ii[j]] = NA
+              		FD$HTT[ii[j]] = NA              		
+              	}
               }
             }
           }else if(succPrev < 1 & FD$DiveN[ii[1]-gobak]==1){
@@ -375,14 +387,14 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     Result = list(Nbouts=NboutsE,K=NPtypes,Km1=NPtypes-1,EffortP=TotMinP,
                   NSz=NSz,NHt=NHt,NCR=NCR,NLm=NLm,NU=NU,SZmnU=SZmnU,HTmnU=HTmnU,
                   Sp=Sp,Hp=Hp,Cp=Cp,SZmn=SZmn,HTmn=HTmn,Hsz=Hsz,Hsz_u=Hsz_u,
-                  LMlg=LMlg,Lp=Lp,Lss=Lss,LMlgU=LMlgU,Lss_u=Lss_u,
+                  LMlg=LMlg,Lp=Lp,Lss=Lss,
                   Sss=Sss,Sss_u=Sss_u,Hss=Hss,Hss_u=Hss_u,CRate=CRate,Css=Css,Csz=Csz,
                   Cal_dns_mn=Cal_dns_mn,Cal_dns_sg=Cal_dns_sg,logMass_sg=logMass_sg)
   }else{
     Result = list(Nbouts=NboutsE,K=NPtypes,Km1=NPtypes-1,EffortP=TotMinP,
                   NSz=NSz,NHt=NHt,NCR=NCR,NLm=NLm,NU=NU,SZmnU=SZmnU,HTmnU=HTmnU,
                   Sp=Sp,Hp=Hp,Cp=Cp,SZmn=SZmn,HTmn=HTmn,Hsz=Hsz,Hsz_u=Hsz_u,
-                  LMlg=LMlg,Lp=Lp,Lss=Lss,LMlgU=LMlgU,Lss_u=Lss_u,Lg=Lg,Lg_u=Lg_u,
+                  LMlg=LMlg,Lp=Lp,Lss=Lss,Lg=Lg,
                   Sss=Sss,Sss_u=Sss_u,Hss=Hss,Hss_u=Hss_u,CRate=CRate,Css=Css,Csz=Csz,
                   Cal_dns_mn=Cal_dns_mn,Cal_dns_sg=Cal_dns_sg,logMass_sg=logMass_sg,
                   Ngrp=Ngrp,GrpE=GrpE,Sg=Sg,Hg=Hg,Cg=Cg,Sg_u=Sg_u,Hg_u=Hg_u)
