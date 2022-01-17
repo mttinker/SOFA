@@ -88,7 +88,9 @@ for (i in 1:length(slctvars)){
 		ix = c(ix,i)
 	} 
 }
-slctvars = slctvars[-ix]
+if(length(ix)>0){
+	slctvars = slctvars[-ix]
+}
 #
 rspns = dlg_message(c("Do you wish to analyze the full data set? If you answer 'no', ", 
 											"it is assumed you wish to analyze just a sub-set of the data,",

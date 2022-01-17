@@ -160,13 +160,13 @@ generated quantities {
   SZ_u = exp(muSZ_u +  square(sigSZ_u)/2 );
   for (j in 1:Km1){
     // Mean Cons rate (CR, g/min) by prey type, adjusted for mean prey size and lognormal dist
-    CR[j] = fmin(100, exp(phi1[j] + phi2[j] * (2.5*log(SZ[j])-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
+    CR[j] = fmin(100, exp(phi1[j] + phi2[j] * (2.5*muSZ[j]-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
     // Mean HT/itm, by prey type, adjusted for mean prey size and lognormal dist
-    HT[j] = fmin(900, exp(psi1[j] + psi2[j] * (2.5*log(SZ[j])-7) + square(sigHT[j])/2)) ;
+    HT[j] = fmin(900, exp(psi1[j] + psi2[j] * (2.5*muSZ[j]-7) + square(sigHT[j])/2)) ;
     LM[j] = inv_logit(lgtLM[j]) ;
   }
   // Mean HT/item for Unid prey:
-  HT_u = exp(psi1_u + psi2_u * (2.5*log(SZ_u)-7) + square(sigHT_u)/2);
+  HT_u = exp(psi1_u + psi2_u * (2.5*muSZ_u-7) + square(sigHT_u)/2);
   // Mean Energy intake rate (ER) by prey, incl. uncertainty in Caloric density
   ER = Cal_dens .* CR ;
   // Proportional contribution (biomass consumed) of each prey type to diet: 

@@ -226,20 +226,20 @@ generated quantities {
   }
   for (j in 1:Km1){
     // Mean Cons rate (CR, g/min) by prey type, adjusted for mean prey size and lognormal dist
-    CR[j] = fmin(100, exp(phi1[j] + phi2[j] * (2.5*log(SZ[j])-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
+    CR[j] = fmin(100, exp(phi1[j] + phi2[j] * (2.5*muSZ[j]-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
     // Mean HT/itm, by prey type, adjusted for mean prey size and lognormal dist
-    HT[j] = fmin(900, exp(psi1[j] + psi2[j] * (2.5*log(SZ[j])-7) + square(sigHT[j])/2)) ;
+    HT[j] = fmin(900, exp(psi1[j] + psi2[j] * (2.5*muSZ[j]-7) + square(sigHT[j])/2)) ;
     LM[j] = inv_logit(lgtLM[j]) ;
     Omega[j] = 0 ;
     for(g in 1:Ngrp){
       Omega[j] = Omega[j] + ((1.0 / Ngrp) * OmegaG[g][j]) ;
-      CRg[g][j] = fmin(100, exp(phi1G[g][j] + phi2[j] * (2.5*log(SZg[g][j])-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
-      HTg[g][j] = fmin(900, exp(psi1G[g][j] + psi2[j] * (2.5*log(SZg[g][j])-7) + square(sigHT[j])/2)) ;
+      CRg[g][j] = fmin(100, exp(phi1G[g][j] + phi2[j] * (2.5*muSZG[g][j]-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
+      HTg[g][j] = fmin(900, exp(psi1G[g][j] + psi2[j] * (2.5*muSZG[g][j]-7) + square(sigHT[j])/2)) ;
       LMg[g][j] = inv_logit(lgtLMG[g][j]) ;
     }
   }
   // Mean HT/item for Unid prey:
-  HT_u = exp(psi1_u + psi2_u * (2.5*log(SZ_u)-7) + square(sigHT_u)/2);
+  HT_u = exp(psi1_u + psi2_u * (2.5*muSZ_u-7) + square(sigHT_u)/2);
   // Mean Energy intake rate (ER) by prey, incl. uncertainty in Caloric density
   ER = Cal_dens .* CR ;
   // Proportional contribution (biomass consumed) of each prey type to diet: 
@@ -252,7 +252,7 @@ generated quantities {
   LMmn = sum(eta .* LM) ;
   // Repeat above stats, by group
   for(g in 1:Ngrp){
-    HTg_u[g] = exp(psi1G_u[g] + psi2_u * (2.5*log(SZg_u[g])-7) + square(sigHT_u)/2);
+    HTg_u[g] = exp(psi1G_u[g] + psi2_u * (2.5*muSZG_u[g]-7) + square(sigHT_u)/2);
     ERg[g] = Cal_dens .* CRg[g] ;
     PiG[g] = (etaG[g] .* CRg[g]) / sum(etaG[g] .* CRg[g]) ;
     CRgmn[g] = sum(etaG[g] .* CRg[g]) ;
