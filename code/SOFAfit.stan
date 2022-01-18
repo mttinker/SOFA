@@ -37,20 +37,24 @@ data {
   real LMlg[NLm];                 // Array of logit(lambda), proportion of succesful dives by prey, by bout  
   vector[NLm] Lss;                // Array of sample sizes (n obs per bout) for logit lambda observations 
 }
+transformed data{
+	vector[Km1] logMass_mn;
+	logMass_mn = -1 * square(logMass_sg)/2 ;
+}
 // Section 2. The parameters to be estimated 
 parameters {
   simplex[Km1] eta ;             // mean proportional effort allocation by prey type (if all ID'd)
-  real<lower=0> tauB ;           // relative precision of diet composition across bouts
+  real<lower=0,upper=20> tauB ;           // relative precision of diet composition across bouts
   simplex[K] theta[Nbouts] ;     // vectors of bout-specific prey-allocation probs for multinomial  
-  vector<lower=0>[Km1] muSZ ;    // mean of log(Size_mm) of each prey
-  real<lower=0> muSZ_u ;         // mean of log(Size_mm) of UN-ID
+  vector<lower=0,upper=6>[Km1] muSZ ;    // mean of log(Size_mm) of each prey
+  real<lower=0,upper=6> muSZ_u ;         // mean of log(Size_mm) of UN-ID
   vector[Km1] lgtLM ;            // mean logit(lambda) (dive success rate) for each prey
-  vector<lower=0>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey 
-  vector<lower=0>[Km1] sigHT ;   // stdev of log(HT per item) of each prey 
-  vector<lower=0>[Km1] sigCR ;   // stdev of log(HT per item) of each prey 
-  vector<lower=0>[Km1] sigLM ;   // stdev of logit(lambda) of each prey 
-  real<lower=0> sigSZ_u ;        // stdev of log(Size_cm) of UN-ID
-  real<lower=0> sigHT_u ;        // stdev of log(HT per item) of UN-ID    
+  vector<lower=0,upper=20>[Km1] sigSZ ;   // stdev of log(Size_cm) of each prey 
+  vector<lower=0,upper=20>[Km1] sigHT ;   // stdev of log(HT per item) of each prey 
+  vector<lower=0,upper=20>[Km1] sigCR ;   // stdev of log(HT per item) of each prey 
+  vector<lower=0,upper=20>[Km1] sigLM ;   // stdev of logit(lambda) of each prey 
+  real<lower=0,upper=20> sigSZ_u ;        // stdev of log(Size_cm) of UN-ID
+  real<lower=0,upper=20> sigHT_u ;        // stdev of log(HT per item) of UN-ID    
   vector<lower=0>[Km1] phi1 ;    // intercept of CRate v Size fxn by prey 
   vector<lower=0>[Km1] phi2 ;    // slope of CRate v Size fxn by prey 
   vector<lower=0>[Km1] psi1 ;    // intercept of HT v Size fxn by prey 
@@ -121,26 +125,26 @@ model {
   //
   // B) Prior distributions for model parameters:
   Cal_dens ~ normal(Cal_dns_mn,Cal_dns_sg) ; // Caloric density (incorporates est. uncertainty)
-  lgSz_adj ~ normal(0,logMass_sg) ;          // CRate adjust (incorporates est. uncertainty)
+  lgSz_adj ~ normal(logMass_mn,logMass_sg) ;          // CRate adjust (incorporates est. uncertainty)
   // NOTE: also include normal prior for CR_uncert multiplier, with mean of 1,
   //   to incorporate uncertainty associated with Mass-size power functions
-  tauB ~ cauchy(0,2.5) ;    // precision param for diet comp variation across bouts
-  phi1 ~ cauchy(0,1) ;   // Intercept of log Cons Rate, by prey
-  phi2 ~ cauchy(0,1) ;   // effect of size on log Cons rate
-  psi1 ~ cauchy(0,1) ;   // Intercept of log HT, by prey
-  psi2 ~ cauchy(0,1) ;   // effect of size on log HT rate
+  tauB ~ cauchy(0,1) ;   // precision param for diet comp variation across bouts
+  phi1 ~ cauchy(0,.5) ;   // Intercept of log Cons Rate, by prey
+  phi2 ~ cauchy(0,.5) ;   // effect of size on log Cons rate
+  psi1 ~ cauchy(0,1) ; // Intercept of log HT, by prey
+  psi2 ~ cauchy(0,.5) ;   // effect of size on log HT rate
   psi1_u ~ cauchy(0,1) ; // Intercept of log HT, UN-ID prey
-  psi2_u ~ cauchy(0,1) ; // effect of size on log HTm UN-ID prey
+  psi2_u ~ cauchy(0,.5) ; // effect of size on log HTm UN-ID prey
   muSZ ~ normal(4,1);      // log-mean size by prey type
   muSZ_u ~ normal(4,1);    // log-mean size of UN-ID prey
   maxPunid ~ beta(3,1);    // max prob un-ID, for prey overlapping UN-ID in size & HT
-  sigSZ ~ cauchy(0,2.5);   // variation in prey size across bouts, by prey type
-  sigHT ~ cauchy(0,2.5);   // variation in prey HT across bouts, by prey type
-  sigCR ~ cauchy(0,2.5);   // variation in prey CR across bouts, by prey type
-  sigSZ_u ~ cauchy(0,2.5); // variation in prey size across bouts, unid prey
-  sigHT_u ~ cauchy(0,2.5); // variation in prey HT across bouts, unid prey
-  lgtLM ~ cauchy(0,2.5); // mean logit(lambda), dive success rate, by prey
-  sigLM ~ cauchy(0,2.5);  // variation in logit(lambda), dive success rate
+  sigSZ ~ cauchy(0,.5);   // variation in prey size across bouts, by prey type
+  sigHT ~ cauchy(0,.5);   // variation in prey HT across bouts, by prey type
+  sigCR ~ cauchy(0,.5);   // variation in prey CR across bouts, by prey type
+  sigSZ_u ~ cauchy(0,.5); // variation in prey size across bouts, unid prey
+  sigHT_u ~ cauchy(0,.5); // variation in prey HT across bouts, unid prey
+  lgtLM ~ normal(1,2); // mean logit(lambda), dive success rate, by prey
+  sigLM ~ cauchy(0,1.5);  // variation in logit(lambda), dive success rate
 }
 // Section 5. Derived parameters and statistics 
 generated quantities {
