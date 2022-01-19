@@ -44,6 +44,7 @@ data {
   int<lower=1,upper=Ngrp> Lg[NLm];// Array of group id values for Dive success rate
   real LMlg[NLm];                 // Array of logit(lambda), proportion of succesful dives by prey, by bout  
   vector[NLm] Lss;                // Array of sample sizes (n obs per bout) for logit lambda observations   
+  vector<lower=0>[Km1] CR_max ;   // maximum possible mean CR per prey type
 }
 transformed data{
 	vector[Km1] logMass_mn;
@@ -201,6 +202,8 @@ generated quantities {
   vector<lower=0,upper=1>[Km1] Omega ;
   vector[Km1] SZ ;
   vector[Km1] SZg[Ngrp] ;
+  vector[Km1] logSZ ;
+  vector[Km1] logSZg[Ngrp] ;
   real SZ_u ;
   real SZg_u[Ngrp] ;
   vector[Km1] HT ;
@@ -222,23 +225,25 @@ generated quantities {
   real LMmn ;
   real LMgmn[Ngrp] ;
   // Mean Size (mm) by prey type (adjust for log-normal)
-  SZ = exp(muSZ +  square(sigSZ)/2 );
+  logSZ = muSZ + square(sigSZ)/2 ;
+  SZ = exp(muSZ + square(sigSZ)/2 );
   SZ_u = exp(muSZ_u +  square(sigSZ_u)/2 );
   for(g in 1:Ngrp){
+  	logSZg[g] = muSZG[g] + square(sigSZ)/2  ;
     SZg[g] = exp(muSZG[g] +  square(sigSZ)/2 );
     SZg_u[g] = exp(muSZG_u[g] +  square(sigSZ_u)/2 );
   }
   for (j in 1:Km1){
     // Mean Cons rate (CR, g/min) by prey type, adjusted for mean prey size and lognormal dist
-    CR[j] = fmin(100, exp(phi1[j] + phi2[j] * (2.5*muSZ[j]-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
+    CR[j] = fmin(CR_max[j], exp(phi1[j] + phi2[j] * (2.5*logSZ[j]-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
     // Mean HT/itm, by prey type, adjusted for mean prey size and lognormal dist
-    HT[j] = fmin(900, exp(psi1[j] + psi2[j] * (2.5*muSZ[j]-7) + square(sigHT[j])/2)) ;
+    HT[j] = fmin(600, exp(psi1[j] + psi2[j] * (2.5*logSZ[j]-7) + square(sigHT[j])/2)) ;
     LM[j] = inv_logit(lgtLM[j]) ;
     Omega[j] = 0 ;
     for(g in 1:Ngrp){
       Omega[j] = Omega[j] + ((1.0 / Ngrp) * OmegaG[g][j]) ;
-      CRg[g][j] = fmin(100, exp(phi1G[g][j] + phi2[j] * (2.5*muSZG[g][j]-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
-      HTg[g][j] = fmin(900, exp(psi1G[g][j] + psi2[j] * (2.5*muSZG[g][j]-7) + square(sigHT[j])/2)) ;
+      CRg[g][j] = fmin(CR_max[j], exp(phi1G[g][j] + phi2[j] * (2.5*logSZg[g][j]-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
+      HTg[g][j] = fmin(600, exp(psi1G[g][j] + psi2[j] * (2.5*logSZg[g][j]-7) + square(sigHT[j])/2)) ;
       LMg[g][j] = inv_logit(lgtLMG[g][j]) ;
     }
   }

@@ -36,6 +36,7 @@ data {
   int<lower=1,upper=Km1> Lp[NLm]; // Array of prey id values for success rate obs
   real LMlg[NLm];                 // Array of logit(lambda), proportion of succesful dives by prey, by bout  
   vector[NLm] Lss;                // Array of sample sizes (n obs per bout) for logit lambda observations 
+  vector<lower=0>[Km1] CR_max ;   // maximum possible mean CR per prey type
 }
 transformed data{
 	vector[Km1] logMass_mn;
@@ -149,6 +150,7 @@ model {
 // Section 5. Derived parameters and statistics 
 generated quantities {
   vector[Km1] SZ ;
+  vector[Km1] logSZ ;
   real SZ_u ;
   vector[Km1] HT ;
   real HT_u ;
@@ -160,13 +162,14 @@ generated quantities {
   real ERmn ;
   real LMmn ;
   // Mean Size (mm) by prey type (adjust for log-normal)
+  logSZ = muSZ + square(sigSZ)/2 ;
   SZ = exp(muSZ +  square(sigSZ)/2 );
   SZ_u = exp(muSZ_u +  square(sigSZ_u)/2 );
   for (j in 1:Km1){
     // Mean Cons rate (CR, g/min) by prey type, adjusted for mean prey size and lognormal dist
-    CR[j] = fmin(100, exp(phi1[j] + phi2[j] * (2.5*muSZ[j]-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
+    CR[j] = fmin(CR_max[j], exp(phi1[j] + phi2[j] * (2.5*logSZ[j]-7) + square(sigCR[j])/2 + lgSz_adj[j]) );
     // Mean HT/itm, by prey type, adjusted for mean prey size and lognormal dist
-    HT[j] = fmin(900, exp(psi1[j] + psi2[j] * (2.5*muSZ[j]-7) + square(sigHT[j])/2)) ;
+    HT[j] = fmin(600, exp(psi1[j] + psi2[j] * (2.5*logSZ[j]-7) + square(sigHT[j])/2)) ;
     LM[j] = inv_logit(lgtLM[j]) ;
   }
   // Mean HT/item for Unid prey:

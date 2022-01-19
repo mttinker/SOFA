@@ -237,6 +237,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   LMlg = numeric(); Lp = numeric(); Lss = numeric(); Lg = numeric()
   CRate = numeric(); Cp = numeric(); Csz = numeric(); Css = numeric(); Cg = numeric()
   eta_prior = numeric()
+  CR_max = numeric()
   MaxSST = 125
   MaxSS = max(25,round(MaxSST/Ngrp))
   Nprcaps = length(which(Fdat$PreyV>0 & Fdat$PreyV<NPtypes))
@@ -318,6 +319,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       CRate = c(CRate,pmin(250,CRmnP[ii,p])); Cp = c(Cp,rep(p,length(ii)))      
       Csz = c(Csz,2.5*log(SmnP[ii,p])-7) ; Css = c(Css,CRmnP_n[ii,p])
       Cg = c(Cg,GrpBt[ii]) 
+      CR_max[p] = 2*median(pmin(250,CRmnP[ii,p]))
     }
   }
   # Repeat for un-id prey
@@ -387,14 +389,14 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     Result = list(Nbouts=NboutsE,K=NPtypes,Km1=NPtypes-1,EffortP=TotMinP,
                   NSz=NSz,NHt=NHt,NCR=NCR,NLm=NLm,NU=NU,SZmnU=SZmnU,HTmnU=HTmnU,
                   Sp=Sp,Hp=Hp,Cp=Cp,SZmn=SZmn,HTmn=HTmn,Hsz=Hsz,Hsz_u=Hsz_u,
-                  LMlg=LMlg,Lp=Lp,Lss=Lss,
+                  LMlg=LMlg,Lp=Lp,Lss=Lss,CR_max=CR_max,
                   Sss=Sss,Sss_u=Sss_u,Hss=Hss,Hss_u=Hss_u,CRate=CRate,Css=Css,Csz=Csz,
                   Cal_dns_mn=Cal_dns_mn,Cal_dns_sg=Cal_dns_sg,logMass_sg=logMass_sg)
   }else{
     Result = list(Nbouts=NboutsE,K=NPtypes,Km1=NPtypes-1,EffortP=TotMinP,
                   NSz=NSz,NHt=NHt,NCR=NCR,NLm=NLm,NU=NU,SZmnU=SZmnU,HTmnU=HTmnU,
                   Sp=Sp,Hp=Hp,Cp=Cp,SZmn=SZmn,HTmn=HTmn,Hsz=Hsz,Hsz_u=Hsz_u,
-                  LMlg=LMlg,Lp=Lp,Lss=Lss,Lg=Lg,
+                  LMlg=LMlg,Lp=Lp,Lss=Lss,Lg=Lg,CR_max=CR_max,
                   Sss=Sss,Sss_u=Sss_u,Hss=Hss,Hss_u=Hss_u,CRate=CRate,Css=Css,Csz=Csz,
                   Cal_dns_mn=Cal_dns_mn,Cal_dns_sg=Cal_dns_sg,logMass_sg=logMass_sg,
                   Ngrp=Ngrp,GrpE=GrpE,Sg=Sg,Hg=Hg,Cg=Cg,Sg_u=Sg_u,Hg_u=Hg_u)
