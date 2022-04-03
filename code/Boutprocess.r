@@ -254,7 +254,12 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-          iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        		iiis = ii[GrpBt[ii]==g]
+        	}else{
+        		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+        	}
+        	iii = c(iii,iiis)
         }
         ii = iii
       }
@@ -262,13 +267,18 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       Sg = c(Sg,GrpBt[ii])
     }
     #
-    ii = which(HTmnP_n[,p] >= MnN1 & SmnP_n[,p] > 0)
-    if(length(ii)<6){ii = which(HTmnP_n[,p] > 0 & SmnP_n[,p] > 0)}
+    ii = which(HTmnP_n[,p] >= MnN1 & HTmnP[,p] >0 & SmnP_n[,p] > 0)
+    if(length(ii)<6){ii = which(HTmnP_n[,p] > 0 & HTmnP[,p] >0 & SmnP_n[,p] > 0)}
     if(length(ii)>0){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-          iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        		iiis = ii[GrpBt[ii]==g]
+        	}else{
+        		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+        	}
+        	iii = c(iii,iiis)
         }
         ii = iii
       }
@@ -283,7 +293,12 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-          iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        		iiis = ii[GrpBt[ii]==g]
+        	}else{
+        		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+        	}
+        	iii = c(iii,iiis)
         }
         ii = iii
       }
@@ -297,7 +312,12 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-          iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        		iiis = ii[GrpBt[ii]==g]
+        	}else{
+        		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+        	}
+        	iii = c(iii,iiis)
         }
         ii = iii
       }
@@ -312,7 +332,12 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-          iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        		iiis = ii[GrpBt[ii]==g]
+        	}else{
+        		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+        	}
+        	iii = c(iii,iiis)
         }
         ii = iii
       }
@@ -330,7 +355,12 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     if(length(ii)>MaxSST){
       iii = numeric()
       for (g in 1:Ngrp){
-        iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+      	if(length(which(GrpBt[ii]==g)) < 25 ){
+      		iiis = ii[GrpBt[ii]==g]
+      	}else{
+      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+      	}
+      	iii = c(iii,iiis)
       }
       ii = iii
     }
@@ -343,20 +373,30 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     if(length(ii)>MaxSST){
       iii = numeric()
       for (g in 1:Ngrp){
-        iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+      	if(length(which(GrpBt[ii]==g)) < 25 ){
+      		iiis = ii[GrpBt[ii]==g]
+      	}else{
+      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+      	}
+      	iii = c(iii,iiis)
       }
       ii = iii
     }
     NImnU = (NmnP[ii,p]); Nss_u = NmnP_n[ii,p]
     Ng_u = GrpBt[ii]
   }
-  ii = which(HTmnP_n[,p] >= MnN1 & SmnP_n[,p] > 0)
-  if(length(ii)<6){ii = which(HTmnP_n[,p] > 0 & SmnP_n[,p] > 0)}
+  ii = which(HTmnP_n[,p] >= MnN1 & HTmnP[,p] >0 & SmnP_n[,p] > 0)
+  if(length(ii)<6){ii = which(HTmnP_n[,p] > 0 & HTmnP[,p] >0 & SmnP_n[,p] > 0)}
   if(length(ii)>0){     
     if(length(ii)>MaxSST){
       iii = numeric()
       for (g in 1:Ngrp){
-        iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+      	if(length(which(GrpBt[ii]==g)) < 25 ){
+      		iiis = ii[GrpBt[ii]==g]
+      	}else{
+      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+      	}
+      	iii = c(iii,iiis)
       }
       ii = iii
     }
@@ -370,7 +410,12 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     if(length(ii)>MaxSST){
       iii = numeric()
       for (g in 1:Ngrp){
-        iii = c(iii,sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE))
+      	if(length(which(GrpBt[ii]==g)) < 25 ){
+      		iiis = ii[GrpBt[ii]==g]
+      	}else{
+      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+      	}
+      	iii = c(iii,iiis)
       }
       ii = iii
     }
