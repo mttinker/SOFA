@@ -44,6 +44,8 @@ dat$SuccessV[which(dat$Success=="c")] = 0.5
 # Clean-up Sex and Ageclass fields as necessary
 ii = which(dat$Sex!="f" & dat$Sex!="m" & dat$Sex!="u")
 dat$Sex[ii] = "u"
+ii = which(is.na(dat$Sex))
+dat$Sex[ii] = "u"
 dat$Ageclass[dat$Ageclass=="s"] = "sa"
 dat$Ageclass[dat$Ageclass=="o"] = "aa"
 dat$Ageclass[dat$Ageclass=="p"] = "j"
@@ -73,7 +75,8 @@ while(NoDiveSucc>0){
 }
 dvlst = dat %>% group_by(Date,Bout,Subbout,Divenum) %>% 
   summarize(Npr = length(Prey))
-dvlst$BoutN = as.numeric(as.factor(dvlst$Bout))
+dvlst$BoutN = paste0(dvlst$Date,"_",dvlst$Bout)
+dvlst$BoutN = as.numeric(as.factor(dvlst$BoutN))
 Nbouts = max(dvlst$BoutN)
 Ndives = nrow(dvlst)
 Nobs = nrow(dat)

@@ -7,8 +7,9 @@ require(readxl)
 require(openxlsx)
 # NOTE: necessary to install 64 bit version of Java ('Windows Offline')
 #  from https://www.java.com/en/download/manual.jsp
-require(rJava) 
-require(rChoiceDialogs)
+# require(rJava) 
+#require(rChoiceDialogs)
+require(tcltk)
 require(parallel)
 require(rstan)
 require(ggplot2)
@@ -38,9 +39,8 @@ Projectpath = dlg_dir('./projects/', "Select Project folder")$res
 Projectname = basename(Projectpath)
 Sys.sleep(.5)
 rslt_list = dir(paste0(Projectpath,"/results"))
-rdata_file = rselect.list(rslt_list, preselect = NULL, multiple = FALSE,
-										title = "Select results file" ,
-										graphics = getOption("menu.graphics")) 
+rdata_file = tk_select.list(rslt_list, preselect = NULL, multiple = FALSE,
+										title = "Select results file" ) 
 if(length(rdata_file)==0){
 	dlg_message(c("No data file selected"), "ok")
 	stop_quietly()
@@ -53,16 +53,26 @@ file.copy(resultsfilename,
 GL1 = 1; GL2 = 0; GL3 = 0
 if(Grp_TF){
 	attach("./code/Results.rdata"); Grouplist <- Grouplist; detach("file:./code/Results.rdata")
-	dlg_message(c("This results file has by-groups. You can select up to 3 sample group levels ",
+	dlg_message(c("This results file has by-groups. You can select up to 9 sample group levels ",
 								"for generating certain plots that show statistics by group level.",
 								"(Tables of stats will still be generated for all group levels)"), "ok")
-	Grplevsamp = rselect.list(Grouplist$Groupname, preselect = NULL, multiple = TRUE,
-														title = "Select group levels" ,
-														graphics = getOption("menu.graphics")) 
-	Grplevsamp = Grplevsamp[1:min(3,length(Grplevsamp))]
+	Grplevsamp = tk_select.list(Grouplist$Groupname, preselect = NULL, multiple = TRUE,
+														title = "Select group levels" ) 
+	Grplevsamp = Grplevsamp[1:min(9,length(Grplevsamp))]
 	GL1 = which(Grouplist$Groupname==Grplevsamp[1])
 	if(length(Grplevsamp)>1){GL2 = which(Grouplist$Groupname==Grplevsamp[2])}else{GL2=0}
 	if(length(Grplevsamp)>2){GL3 = which(Grouplist$Groupname==Grplevsamp[3])}else{GL3=0}
+	if(length(Grplevsamp)>3){GL4 = which(Grouplist$Groupname==Grplevsamp[4])}else{GL4=0}
+	if(length(Grplevsamp)>4){GL5 = which(Grouplist$Groupname==Grplevsamp[5])}else{GL5=0}
+	if(length(Grplevsamp)>5){GL6 = which(Grouplist$Groupname==Grplevsamp[6])}else{GL6=0}
+	if(length(Grplevsamp)>6){GL7 = which(Grouplist$Groupname==Grplevsamp[7])}else{GL7=0}
+	if(length(Grplevsamp)>7){GL8 = which(Grouplist$Groupname==Grplevsamp[8])}else{GL8=0}
+	if(length(Grplevsamp)>8){GL9 = which(Grouplist$Groupname==Grplevsamp[9])}else{GL9=0}
+	
+	if(length(Grplevsamp)<4){GrpFgHt = 5}
+	if(length(Grplevsamp)>3 & length(Grplevsamp)<7){GrpFgHt = 10}
+	if(length(Grplevsamp)>6){GrpFgHt = 15}
+
 	rm(Grplevsamp)
 }
 rspnse = dlg_message(c("About to render an html rmarkdown report summarizing model results, ",
@@ -80,5 +90,7 @@ render("./code/SOFA_summary.Rmd",
 			 output_file = "SOFA_summary.html",
 			 params = list(rep_title = title, rep_subtitle = subtitle, 
 			 							rep_date = Daterun, show.grptxt = Grp_TF,
-			 							GL1 = GL1, GL2=GL2, GL3=GL3)) # 
+			 							GL1 = GL1, GL2=GL2, GL3=GL3,
+			 							GL4 = GL4, GL5=GL5, GL6=GL6,
+			 							GL7 = GL7, GL8=GL8, GL9=GL9,GrpFgHt=GrpFgHt)) # 
 dlg_message(c("The results can be viewed by opening 'SOFA_summary.html' in the projecy folder"), "ok")

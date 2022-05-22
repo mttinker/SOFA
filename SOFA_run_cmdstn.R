@@ -8,8 +8,9 @@ require(readxl)
 require(openxlsx)
 # NOTE: necessary to install 64 bit version of Java ('Windows Offline')
 #  from https://www.java.com/en/download/manual.jsp
-require(rJava) 
-require(rChoiceDialogs)
+# require(rJava) 
+require(tcltk)
+# require(rChoiceDialogs)
 require(parallel)
 #require(rstan)
 library(cmdstanr)
@@ -103,14 +104,18 @@ if (rspns=="yes"){
 	SBST = 1
 }
 if (SBST==1){
-	slctvar = rselect.list(slctvars, preselect = NULL, multiple = FALSE,
- 						 title = "Which variable?",
- 						 graphics = getOption("menu.graphics"))
+	slctvar = tk_select.list(slctvars, preselect = NULL, multiple = FALSE,
+								 title = "Which variable?")
+# 	slctvar = rselect.list(slctvars, preselect = NULL, multiple = FALSE,
+#  						 title = "Which variable?",
+#  						 graphics = getOption("menu.graphics"))
 	col = which(colnames(dat)==slctvar)
 	lvls = rownames(as.matrix(table(dat[,col])))
-	lvls = rselect.list(lvls, preselect = NULL, multiple = TRUE,
-										 title = paste0("Which values of ",slctvar) ,
-										 graphics = getOption("menu.graphics")) 
+	lvls = tk_select.list(lvls, preselect = NULL, multiple = TRUE,
+											title = paste0("Which values of ",slctvar)) 
+	# lvls = rselect.list(lvls, preselect = NULL, multiple = TRUE,
+	# 									 title = paste0("Which values of ",slctvar) ,
+	# 									 graphics = getOption("menu.graphics")) 
 	iis = numeric()
 	slctvardef = paste0(slctvar,"-")
 	for(i in 1:length(lvls)){
@@ -141,7 +146,7 @@ rslt = try(suppressWarnings ( Fdatprocess(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,df
 if(!is.list(rslt)){
 	errtxt = dlg_message(c("An error occured in data processing. This is likely due to a ",
 												"formatting error in either the raw data or Prey_Key spreadsheet.",
-												"Go nacl and re-check both, following instructions in manual"), "ok")$res
+												"Go back and re-check both, following instructions in manual"), "ok")$res
 	stop_quietly()
 }
 Fdat = rslt$Fdat; Boutlist=rslt$Boutlist
@@ -150,7 +155,7 @@ logMass_sg = rslt$logMass_sg
 Nbouts = rslt$Nbouts; Ndives = rslt$Ndives; Nobs = rslt$Nobs; NPtypes = rslt$NPtypes
 MassLngFits = rslt$MassLngFits
 rm(rslt)
-rspns = dlg_message(c("Do you wish to review plots of mass-length data fits (can take some time)"), "yesno")$res
+rspns = dlg_message(c("Do you wish to review plots of mass-length data fits?"), "yesno")$res
 if (rspns=="yes"){
 	# Generate mass-length plots by prey code
 	for(pr in 1:nrow(dfPr)){
@@ -178,9 +183,11 @@ if (rspns=="no"){
 	GrpOpt = 1
 }
 if(GrpOpt==1){
-	Grpvar = rselect.list(slctvars, preselect = NULL, multiple = TRUE,
-												title = "Which variables?",
-												graphics = getOption("menu.graphics"))
+	Grpvar = tk_select.list(slctvars, preselect = NULL, multiple = TRUE,
+												title = "Which variables?")	
+	# Grpvar = rselect.list(slctvars, preselect = NULL, multiple = TRUE,
+	# 											title = "Which variables?",
+	# 											graphics = getOption("menu.graphics"))
 	Ngrpvar = length(Grpvar)
 }
 # Determine group ID for each bout, if GrpOpt = 1
@@ -219,7 +226,7 @@ if(!is.list(stan.data)){
 # options(mc.cores = parallel::detectCores())
 # rstan_options(auto_write = TRUE)
 cores = detectCores()
-ncore = max(3,min(20,cores-4))
+ncore = max(3,min(20,cores-3))
 Niter = round(nsamples/ncore)
 #
 if(GrpOpt==0){

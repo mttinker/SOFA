@@ -238,10 +238,11 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   CRate = numeric(); Cp = numeric(); Csz = numeric(); Css = numeric(); Cg = numeric()
   eta_prior = numeric()
   CR_max = numeric()
-  MaxSST = 125
-  MaxSS = max(25,round(MaxSST/Ngrp))
+  MaxSST = 120
+  MaxSS = max(20,round(MaxSST/Ngrp))
   Nprcaps = length(which(Fdat$PreyV>0 & Fdat$PreyV<NPtypes))
-  # Cap Crate at 250
+  # Cap Crate at 125
+  CR_maxval = 125
   set.seed(123)
   for (p in 1:(NPtypes-1)){
     #
@@ -254,7 +255,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        	if(length(which(GrpBt[ii]==g)) < 20 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -273,7 +274,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        	if(length(which(GrpBt[ii]==g)) < 20 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -293,7 +294,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        	if(length(which(GrpBt[ii]==g)) < 20 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -312,7 +313,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        	if(length(which(GrpBt[ii]==g)) < 20 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -332,7 +333,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 25 ){
+        	if(length(which(GrpBt[ii]==g)) < 20 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -341,10 +342,10 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
         }
         ii = iii
       }
-      CRate = c(CRate,pmin(250,CRmnP[ii,p])); Cp = c(Cp,rep(p,length(ii)))      
+      CRate = c(CRate,pmin(CR_maxval,CRmnP[ii,p])); Cp = c(Cp,rep(p,length(ii)))      
       Csz = c(Csz,2.5*log(SmnP[ii,p])-7) ; Css = c(Css,CRmnP_n[ii,p])
       Cg = c(Cg,GrpBt[ii]) 
-      CR_max[p] = 2*median(pmin(250,CRmnP[ii,p]))
+      CR_max[p] = 2*median(pmin(CR_maxval,CRmnP[ii,p]))
     }
   }
   # Repeat for un-id prey
@@ -355,7 +356,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     if(length(ii)>MaxSST){
       iii = numeric()
       for (g in 1:Ngrp){
-      	if(length(which(GrpBt[ii]==g)) < 25 ){
+      	if(length(which(GrpBt[ii]==g)) < 20 ){
       		iiis = ii[GrpBt[ii]==g]
       	}else{
       		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -373,7 +374,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     if(length(ii)>MaxSST){
       iii = numeric()
       for (g in 1:Ngrp){
-      	if(length(which(GrpBt[ii]==g)) < 25 ){
+      	if(length(which(GrpBt[ii]==g)) < 20 ){
       		iiis = ii[GrpBt[ii]==g]
       	}else{
       		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -391,7 +392,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     if(length(ii)>MaxSST){
       iii = numeric()
       for (g in 1:Ngrp){
-      	if(length(which(GrpBt[ii]==g)) < 25 ){
+      	if(length(which(GrpBt[ii]==g)) < 20 ){
       		iiis = ii[GrpBt[ii]==g]
       	}else{
       		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -410,7 +411,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     if(length(ii)>MaxSST){
       iii = numeric()
       for (g in 1:Ngrp){
-      	if(length(which(GrpBt[ii]==g)) < 25 ){
+      	if(length(which(GrpBt[ii]==g)) < 20 ){
       		iiis = ii[GrpBt[ii]==g]
       	}else{
       		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)

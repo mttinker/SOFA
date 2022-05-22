@@ -7,6 +7,13 @@ params:
  GL1: 1
  GL2: 2
  GL3: 0
+ GL4: 0
+ GL5: 0
+ GL6: 0
+ GL7: 0
+ GL8: 0
+ GL9: 0
+ GrpFgHt: 5
 title: "`r params$rep_title`"
 subtitle: "`r params$rep_subtitle`"
 date: "`r params$rep_date`"
@@ -313,7 +320,7 @@ mcmc_intervals(post,
 
 ```
 
-```{r Fig7, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Figure 7. Caterpiller plots showing posterior distributions for $\\pi$~*g,j*~, the proportion of diet (biomass consumed) made up of prey type *j* for group *g* "}
+```{r Fig7, fig.height=GrpFgHt, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Figure 7. Caterpiller plots showing posterior distributions for $\\pi$~*g,j*~, the proportion of diet (biomass consumed) made up of prey type *j* for group *g* "}
 
   if(length(Grpvar)==1){
     Grpvartxt = Grpvar
@@ -325,9 +332,15 @@ mcmc_intervals(post,
   if(params$GL1>0){GL = c(GL,params$GL1) }
   if(params$GL2>0){GL = c(GL,params$GL2) }
   if(params$GL3>0){GL = c(GL,params$GL3) }
-
-  plot_title = c(paste0("Proportional contribution to diet (by biomass), by ",Grpvartxt,
-                      ", Forage data ",Projectname),"","")
+  if(params$GL4>0){GL = c(GL,params$GL4) }
+  if(params$GL5>0){GL = c(GL,params$GL5) }
+  if(params$GL6>0){GL = c(GL,params$GL6) }
+  if(params$GL7>0){GL = c(GL,params$GL7) }
+  if(params$GL8>0){GL = c(GL,params$GL8) }
+  if(params$GL9>0){GL = c(GL,params$GL9) }
+  txt1 = paste0("Proportional contribution to diet (by biomass), by ",Grpvartxt,
+                      ", Forage data ",Projectname)
+  plot_title = c(txt1,"","",txt1,"","",txt1,"","")
   plts = list()
   for(g in 1:length(GL)){
     gl = GL[g]
@@ -338,11 +351,11 @@ mcmc_intervals(post,
       ggtitle(plot_title[g],subtitle = paste0("Group level ",Grouplist[gl,4])) 
     )
   }
-  grid.arrange(grobs=plts,ncol=length(GL))
+  grid.arrange(grobs=plts,ncol=min(3,length(GL)))
 
 ```
 
-```{r Fig8, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Figure 8. Caterpiller plot showing posterior distributions for *er*~*g,j*~, the rate of energy intake while feeding on each prey type *j* for group *g* "}
+```{r Fig8, fig.height=GrpFgHt, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Figure 8. Caterpiller plot showing posterior distributions for *er*~*g,j*~, the rate of energy intake while feeding on each prey type *j* for group *g* "}
 
   if(length(Grpvar)==1){
     Grpvartxt = Grpvar
@@ -354,9 +367,18 @@ mcmc_intervals(post,
   if(params$GL1>0){GL = c(GL,params$GL1) }
   if(params$GL2>0){GL = c(GL,params$GL2) }
   if(params$GL3>0){GL = c(GL,params$GL3) }
+  if(params$GL4>0){GL = c(GL,params$GL4) }
+  if(params$GL5>0){GL = c(GL,params$GL5) }
+  if(params$GL6>0){GL = c(GL,params$GL6) }
+  if(params$GL7>0){GL = c(GL,params$GL7) }
+  if(params$GL8>0){GL = c(GL,params$GL8) }
+  if(params$GL9>0){GL = c(GL,params$GL9) }  
 
-  plot_title = c(paste0("Rate of Energy Intake (kcal/min) by prey type, by ",Grpvartxt,
-                      ", Forage data ",Projectname),"","")
+  txt1 = paste0("Rate of Energy Intake (kcal/min) by prey type, by ",Grpvartxt,
+                      ", Forage data ",Projectname)
+  
+  plot_title = c(txt1,"","",txt1,"","",txt1,"","")
+  
   plts = list()
   for(g in 1:length(GL)){
     gl = GL[g]
@@ -367,7 +389,7 @@ mcmc_intervals(post,
       ggtitle(plot_title[g],subtitle = paste0("Group level ",Grouplist[gl,4])) 
     )
   }
-  grid.arrange(grobs=plts,ncol=length(GL))
+  grid.arrange(grobs=plts,ncol=min(3,length(GL)))
 
 ```
 
