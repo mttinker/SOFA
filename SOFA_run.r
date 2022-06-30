@@ -6,10 +6,7 @@ require(svDialogs)
 require(rstudioapi)
 require(readxl)
 require(openxlsx)
-# NOTE: necessary to install 64 bit version of Java ('Windows Offline')
-#  from https://www.java.com/en/download/manual.jsp
-require(rJava) 
-require(rChoiceDialogs)
+require(tcltk)
 require(parallel)
 require(rstan)
 rstan::rstan_options(javascript=FALSE)
@@ -44,9 +41,9 @@ MnN1 = as.numeric(dlg_input(message = "Min dives/bout for estimating prey attrib
 MnN2 = as.numeric(dlg_input(message = "Min dives/bout for estimating effort allocation", 
 														default = 10)$res)
 nsamples = as.numeric(dlg_input(message = "Number posterior samples from Bayesian fitting", 
-														default = 5000)$res)
+																default = 5000)$res)
 nburnin = as.numeric(dlg_input(message = "Number of burn-in samples for Bayesian fitting", 
-														default = 1000)$res)
+															 default = 1000)$res)
 # Process data---------------------------------------------------------------
 # Load data (after selecting Projectname from available sub-folders of data folder)
 dat = read_excel(paste0("./projects/",Projectname,"/Forage_dat.xlsx"))
@@ -101,14 +98,18 @@ if (rspns=="yes"){
 	SBST = 1
 }
 if (SBST==1){
-	slctvar = rselect.list(slctvars, preselect = NULL, multiple = FALSE,
- 						 title = "Which variable?",
- 						 graphics = getOption("menu.graphics"))
+	slctvar = tk_select.list(slctvars, preselect = NULL, multiple = FALSE,
+													 title = "Which variable?")
+	# 	slctvar = rselect.list(slctvars, preselect = NULL, multiple = FALSE,
+	#  						 title = "Which variable?",
+	#  						 graphics = getOption("menu.graphics"))
 	col = which(colnames(dat)==slctvar)
 	lvls = rownames(as.matrix(table(dat[,col])))
-	lvls = rselect.list(lvls, preselect = NULL, multiple = TRUE,
-										 title = paste0("Which values of ",slctvar) ,
-										 graphics = getOption("menu.graphics")) 
+	lvls = tk_select.list(lvls, preselect = NULL, multiple = TRUE,
+												title = paste0("Which values of ",slctvar)) 
+	# lvls = rselect.list(lvls, preselect = NULL, multiple = TRUE,
+	# 									 title = paste0("Which values of ",slctvar) ,
+	# 									 graphics = getOption("menu.graphics")) 
 	iis = numeric()
 	slctvardef = paste0(slctvar,"-")
 	for(i in 1:length(lvls)){
@@ -117,14 +118,29 @@ if (SBST==1){
 		iis = c(iis,ii)
 	}
 	dat = dat[iis,]
+	slctvars = c("Area", "Site", "Period", "Sex", "Ageclass", "Ottername", "Pup")
+	# Note: determine which of these potential selection variables has enough levels
+	ix = numeric()
+	for (i in 1:length(slctvars)){
+		if(slctvars[i]==slctvar){
+			ix = c(ix,i)
+		}else{
+			col = which(colnames(dat)==slctvars[i])
+			lvls = as.matrix(table(dat[,col]))
+			if(length(lvls[which(lvls[,1]>100),1])<2){
+				ix = c(ix,i)
+			} 
+		}
+	}
+	slctvars = slctvars[-ix]
 }
 #
 source("./code/Fdatprocess.R")
 rslt = try(suppressWarnings ( Fdatprocess(dat,dfPr,dfPtp,dfPcl,dfSz,dfPaw,dfM,dfE,dfElst,Adj_Sz_grp,dfSzAd)))
 if(!is.list(rslt)){
 	errtxt = dlg_message(c("An error occured in data processing. This is likely due to a ",
-												"formatting error in either the raw data or Prey_Key spreadsheet.",
-												"Go nacl and re-check both, following instructions in manual"), "ok")$res
+												 "formatting error in either the raw data or Prey_Key spreadsheet.",
+												 "Go back and re-check both, following instructions in manual"), "ok")$res
 	stop_quietly()
 }
 Fdat = rslt$Fdat; Boutlist=rslt$Boutlist
@@ -133,7 +149,7 @@ logMass_sg = rslt$logMass_sg
 Nbouts = rslt$Nbouts; Ndives = rslt$Ndives; Nobs = rslt$Nobs; NPtypes = rslt$NPtypes
 MassLngFits = rslt$MassLngFits
 rm(rslt)
-rspns = dlg_message(c("Do you wish to review plots of mass-length data fits (can take some time)"), "yesno")$res
+rspns = dlg_message(c("Do you wish to review plots of mass-length data fits?"), "yesno")$res
 if (rspns=="yes"){
 	# Generate mass-length plots by prey code
 	for(pr in 1:nrow(dfPr)){
@@ -143,31 +159,30 @@ if (rspns=="yes"){
 				plot(exp(ft$model$x),exp(ft$model$y),main=dfPr$Description[pr],
 						 xlab="size (mm)",ylab="mass (g)")
 				lines(exp(ft$prdct$x),exp(ft$prdct$ypred),col="red")
+				# exp(ft$coefficients[1] + ft$coefficients[2]*log(44.23413))
 			}
 		}
 	}
 }
 #  Allow user to set by-groups for analysis based on grouping variables
-if (SBST == 0){
-	rspns = dlg_message(c("You also have the option of setting 'by-groups' for analysis: ",
-												"this means that one or more categorical variables are used to ", 
-												"divide the data into groups, and stats will be generated ",
-												"for each group level."), "ok")$res
-	rspns = dlg_message(c("Do you wish to analayze data by group, with the by-group",
-												"levels determined by one or more categorical variables?"), "yesno")$res
-	if (rspns=="no"){
-		GrpOpt = 0
-	}else{
-		GrpOpt = 1
-	}
-	if(GrpOpt==1){
-		Grpvar = rselect.list(slctvars, preselect = NULL, multiple = TRUE,
-												 title = "Which variables?",
-												 graphics = getOption("menu.graphics"))
-		Ngrpvar = length(Grpvar)
-	}
+rspns = dlg_message(c("You also have the option of setting 'by-groups' for analysis: ",
+											"this means that one or more categorical variables are used to ", 
+											"divide the data into groups, and stats will be generated ",
+											"for each group level."), "ok")$res
+rspns = dlg_message(c("Do you wish to analayze data by group, with the by-group",
+											"levels determined by one or more categorical variables?"), "yesno")$res
+if (rspns=="no"){
+	GrpOpt = 0
 }else{
-	GrpOpt=0
+	GrpOpt = 1
+}
+if(GrpOpt==1){
+	Grpvar = tk_select.list(slctvars, preselect = NULL, multiple = TRUE,
+													title = "Which variables?")	
+	# Grpvar = rselect.list(slctvars, preselect = NULL, multiple = TRUE,
+	# 											title = "Which variables?",
+	# 											graphics = getOption("menu.graphics"))
+	Ngrpvar = length(Grpvar)
 }
 # Determine group ID for each bout, if GrpOpt = 1
 if(GrpOpt==0){
@@ -202,27 +217,27 @@ if(!is.list(stan.data)){
 #
 # Fit Bayesian model ------------------------------------------------------
 #
-options(mc.cores = parallel::detectCores())
-rstan_options(auto_write = TRUE)
+# options(mc.cores = parallel::detectCores())
+# rstan_options(auto_write = TRUE)
 cores = detectCores()
-ncore = max(3,min(20,cores-4))
-Niter = round(nsamples/ncore)+nburnin
+ncore = max(3,min(20,cores-3))
+Niter = round(nsamples/ncore)
 #
 if(GrpOpt==0){
 	params <- c("tauB","maxPunid","CRmn","ERmn","LMmn","SZ","SZ_u",
 							"HT","HT_u","CR","ER","eta","Pi","Omega",
 							"phi1","phi2","psi1","psi2","LM",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u","sigLM") 
-							# "muSZ","muSZ_u","psi1_u","psi2_u",
+	# "muSZ","muSZ_u","psi1_u","psi2_u",
 }else{
 	params <- c("tauB","tauG","maxPunid","CRmn","ERmn","LMmn","SZ",
 							"SZ_u","HT","HT_u","CR","ER","eta","Pi",
 							"Omega","phi1","phi2","psi1","psi2","LM",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u","sigLM",
-						 	"CRgmn","ERgmn","LMgmn","SZg","SZg_u","HTg","CRg","ERg",
-					  	"LMg","etaG","PiG","OmegaG","phi1G","psi1G",
+							"CRgmn","ERgmn","LMgmn","SZg","SZg_u","HTg","CRg","ERg",
+							"LMg","etaG","PiG","OmegaG","phi1G","psi1G",
 							"sg1","sg2","sg3","sg4","sg5","sg6") 
-							# "muSZ","muSZ_u","muSZG","muSZG_u","psi1_u","psi2_u","psi1G_u",
+	# "muSZ","muSZ_u","muSZG","muSZG_u","psi1_u","psi2_u","psi1G_u",
 }
 #
 # Stan model to fit:
@@ -231,6 +246,7 @@ if (GrpOpt==0){
 }else{
 	fitmodel = "SOFAfit_Grp.stan"
 }
+#
 # Compile model if necessary, or load pre-compiled version if available
 testfile = paste0("./code/",substr(fitmodel ,1,nchar(fitmodel)-5),"_dso.rdata")
 if(file_test("-f", testfile) ==TRUE){
