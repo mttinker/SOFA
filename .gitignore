@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 projects/*
+preylib/bak/*
 !projects/.gitkeep 
 code/Results.rdata
 code/SOFA_summary.html

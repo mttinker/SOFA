@@ -180,20 +180,20 @@ prey_types_df = data.frame("TypeN" = 0, "PreyType" = "UNID",
 writeData(wb, sheet = "Prey_Types", x = prey_types_df, startCol = 1)
 # Add drop-down validation for prey types"
 dataValidation(wb, "Prey_code_key", col = 5, rows = 2:500, type = "list", 
-							 value = "'Prey_Types'!$B$2:$B$50")
+							 value = "'Prey_Types'!$B$2:$B$150")
 # Prey_Classes
 prey_class_df = read_excel("./helperfiles/Prey_Classes.xlsx")
 addWorksheet(wb, "Prey_Classes")
 writeData(wb, sheet = "Prey_Classes", x = prey_class_df, startCol = 1)
 # Add drop-down validation for prey classes"
 dataValidation(wb, "Prey_Types", col = 4, rows = 2:500, type = "list", 
-							 value = "'Prey_Classes'!$B$2:$B$50")
+							 value = "'Prey_Classes'!$B$2:$B$150")
 # Prey_Library_Codes
 addWorksheet(wb, "Prey_Library_Codes")
 writeData(wb, sheet = "Prey_Library_Codes", x = Prey_Spcs[,1:3], startCol = 1)
 # Add drop-down validation for proxy species"
 dataValidation(wb, "Prey_code_key", col = 6:26, rows = 2:500, type = "list", 
-							 value = "'Prey_Library_Codes'!$B$2:$B$50")
+							 value = "'Prey_Library_Codes'!$B$2:$B$150")
 # Add comments for user:
 Comments_df = read_excel("./helperfiles/Prey_Key_Comments.xlsx")
 Clst = list()
