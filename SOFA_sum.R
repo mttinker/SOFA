@@ -15,6 +15,7 @@ require(rmarkdown)
 require(gtools)
 require(dplyr)
 require(knitr)
+require(kableExtra)
 rm(list = ls())
 # Create Generic function for stopping script in case of error:
 stop_quietly <- function() {
@@ -44,12 +45,14 @@ if(length(rdata_file)==0){
 resultsfilename = paste0("./projects/",Projectname,"/results/",rdata_file)
 if(length(grep("Grp", rdata_file))>0){Grp_TF=TRUE}else{Grp_TF=FALSE}
 file.copy(resultsfilename,
+					# "Results.rdata",overwrite = TRUE)
 					paste0("./code/","Results.rdata"),overwrite = TRUE)
 #
 GL1 = 1; GL2 = 0; GL3 = 0; GL4 = 1; GL5 = 0; GL6 = 0; GL7 = 1; GL8 = 0; GL9 = 0; 
 GrpFgHt = 5
 
 if(Grp_TF){
+	# attach("Results.rdata"); Grouplist <- Grouplist; detach("file:Results.rdata")
 	attach("./code/Results.rdata"); Grouplist <- Grouplist; detach("file:./code/Results.rdata")
 	dlg_message(c("This results file has by-groups. You can select up to 9 sample group levels ",
 								"for generating certain plots that show statistics by group level.",
@@ -85,10 +88,10 @@ subtitle = paste0("Project: ", Projectname, ", Results file: ",rdata_file)
 Daterun = Sys.Date()
 render("./code/SOFA_summary.Rmd",
 			 output_dir = paste0("./projects/",Projectname),
-			 output_file = "SOFA_summary.html",
+			 output_file = "SOFA_summary.pdf",
 			 params = list(rep_title = title, rep_subtitle = subtitle, 
 			 							rep_date = Daterun, show.grptxt = Grp_TF,
 			 							GL1 = GL1, GL2=GL2, GL3=GL3,
 			 							GL4 = GL4, GL5=GL5, GL6=GL6,
 			 							GL7 = GL7, GL8=GL8, GL9=GL9,GrpFgHt=GrpFgHt)) # 
-dlg_message(c("The results can be viewed by opening 'SOFA_summary.html' in the projecy folder"), "ok")
+dlg_message(c("The results can be viewed by opening 'SOFA_summary' in the projecy folder"), "ok")

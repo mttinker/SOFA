@@ -1,6 +1,9 @@
 Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   # Function to process foraging data
   require(dplyr)
+	# Cap prey consumption rate based on empirical observations
+	CR_maxval = 100
+	Ratio_ST = sum(Fdat$ST,na.rm=T) / (sum(Fdat$ST,na.rm=T) + sum(Fdat$DT,na.rm=T))
   TotMin = matrix(0,nrow = Nbouts,ncol = 1)
   TotMinP = matrix(0,nrow = Nbouts,ncol = NPtypes)
   AlloctP = matrix(0,nrow = Nbouts,ncol = NPtypes)
@@ -32,7 +35,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     for (i in 1:Ndv){
       ii = which(FD$DiveN==i)
       if(FD$SuccessV[ii][1]==1){
-        FD$Preynum[ii][1]==1
+        FD$Preynum[ii][1]=1
         if(length(ii)>1){
           HTmlt = FD$HT[ii]
           NSU = FD$Nszunits[ii]
@@ -179,7 +182,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     TimeAllocUnP = colSums(STpr*NDvUnP) + colSums(DTpr*NDvUnP) 
     AlloctP[b,] = TimeAllocP/sum(TimeAllocP)
     TimeUnsP = (sum(STun) + sum(DTun))*AlloctP[b,]
-    # To correct CR for unsuccesful dives and unallocated time: 
+    # Need to correct CR for allocted and unallocated unsuccesful dives: 
     CrctF_Un[b,] = (TimeAllocP - TimeAllocUnP) / (TimeAllocP + TimeUnsP) 
     TotMinP[b,] = round((TimeAllocP + TimeUnsP)/60)
     TotMin[b] = sum(TotMinP[b,])
@@ -210,14 +213,16 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
         HTmnP[b,p] = mean(FD$HT[ii]/FD$Ncrct[ii])
       }
       # Mean CR by prey (and sample size) ** NOTE: also select on Tmtag==0
-      ii = which(FD$SuccessV==1 & FD$PreyV==p & FD$Mass_est>0 & FD$HTT>0 & FD$Tmtag ==0)
-      CRmnP_n[b,p] = length(ii)
-      if(length(ii)>0){
-        CRmnP[b,p] = mean(FD$Mass_est[ii]/(FD$HTT[ii]/60))*CrctF_Un[b,p]
-        if(is.nan(CRmnP[b,p]) | is.na(CRmnP[b,p])){
-          CRmnP_n[b,p] = 0
-          CRmnP[b,p] = 0
-        }
+      if(p < NPtypes){
+      	ii = which(FD$SuccessV==1 & FD$PreyV==p & FD$Mass_est>0 & FD$HTT>0 & FD$Ncrct>0 & FD$Tmtag ==0)
+      	CRmnP_n[b,p] = length(ii)
+      	if(length(ii)>0){
+      		CRmnP[b,p] = mean(pmin(CR_maxval*Ratio_ST, ((FD$Mass_est[ii] * FD$Ncrct[ii]) / (FD$HTT[ii]/60)))) * CrctF_Un[b,p]
+      		if(is.nan(CRmnP[b,p]) | is.na(CRmnP[b,p])){
+      			CRmnP_n[b,p] = 0
+      			CRmnP[b,p] = 0
+      		}
+      	}
       }
     }
   }
@@ -236,18 +241,16 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   HTmn = numeric(); Hp = numeric(); Hsz = numeric(); Hss = numeric(); Hg = numeric()
   LMlg = numeric(); Lp = numeric(); Lss = numeric(); Lg = numeric()
   CRate = numeric(); Cp = numeric(); Csz = numeric(); Css = numeric(); Cg = numeric()
-  eta_prior = numeric()
+  MnMass = numeric()
   CR_max = numeric()
-  MaxSST = 120
-  MaxSS = max(20,round(MaxSST/Ngrp))
+  MaxSST = 150
+  MaxSS = max(25,round(MaxSST/Ngrp))
   Nprcaps = length(which(Fdat$PreyV>0 & Fdat$PreyV<NPtypes))
-  # Cap Crate at 125
-  CR_maxval = 125
   set.seed(123)
   for (p in 1:(NPtypes-1)){
     #
     ii = which(Fdat$PreyV==p)
-    eta_prior[p] = (length(ii)/Nprcaps)*(NPtypes-1)*2.5
+    MnMass[p] = mean(Fdat$Mass_est[ii],na.rm=T)
     #
     ii = which(SmnP_n[,p] >= MnN1)
     if(length(ii)<6){ii = which(SmnP_n[,p] > 0)}
@@ -255,7 +258,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 20 ){
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -274,7 +277,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 20 ){
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -294,7 +297,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 20 ){
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -313,7 +316,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 20 ){
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -333,7 +336,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>MaxSST){
         iii = numeric()
         for (g in 1:Ngrp){
-        	if(length(which(GrpBt[ii]==g)) < 20 ){
+        	if(length(which(GrpBt[ii]==g)) < 25 ){
         		iiis = ii[GrpBt[ii]==g]
         	}else{
         		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
@@ -342,24 +345,36 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
         }
         ii = iii
       }
-      CRate = c(CRate,pmin(CR_maxval,CRmnP[ii,p])); Cp = c(Cp,rep(p,length(ii)))      
+      CRate = c(CRate,pmin(CR_maxval/2,CRmnP[ii,p])); Cp = c(Cp,rep(p,length(ii)))      
       Csz = c(Csz,2.5*log(SmnP[ii,p])-7) ; Css = c(Css,CRmnP_n[ii,p])
       Cg = c(Cg,GrpBt[ii]) 
-      CR_max[p] = 2*median(pmin(CR_maxval,CRmnP[ii,p]))
+      CR_max[p] = 3*mean(CRmnP[ii,p])
+    }else{
+    	CRate = c(CRate,NA); Cp = c(Cp,rep(p,1))      
+    	Csz = c(Csz,2.5*log(mean(SmnP[,p],na.rm=T))-7) ; Css = c(Css,1)
+    	Cg = c(Cg,1) 
+    	CR_max[p] = NA
     }
   }
+  #
+  # *** NOTE: replace next lines by empirically measured consumption rates  
+  ii = which(is.na(CRate))
+  CRate[ii] = mean(CRate, na.rm = T)
+  CR_max = rep(CR_maxval/ 2, (NPtypes-1) )
+  # **** 
+  #
   # Repeat for un-id prey
   p = NPtypes
   ii = which(SmnP_n[,p] >= MnN1)
   if(length(ii)<6){ii = which(SmnP_n[,p] > 0)}
   if(length(ii)>0){ 
-    if(length(ii)>MaxSST){
+    if(length(ii)>(2*MaxSST)){
       iii = numeric()
       for (g in 1:Ngrp){
-      	if(length(which(GrpBt[ii]==g)) < 20 ){
+      	if(length(which(GrpBt[ii]==g)) < 50 ){
       		iiis = ii[GrpBt[ii]==g]
       	}else{
-      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS*2,length(which(GrpBt[ii]==g))),replace = FALSE)
       	}
       	iii = c(iii,iiis)
       }
@@ -371,13 +386,13 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   ii = which(NmnP_n[,p] >= MnN1 )
   if(length(ii)<6){ii = which(NmnP_n[,p] > 0)}
   if(length(ii)>0){   
-    if(length(ii)>MaxSST){
+    if(length(ii)>(2*MaxSST)){
       iii = numeric()
       for (g in 1:Ngrp){
-      	if(length(which(GrpBt[ii]==g)) < 20 ){
+      	if(length(which(GrpBt[ii]==g)) < 50 ){
       		iiis = ii[GrpBt[ii]==g]
       	}else{
-      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS*2,length(which(GrpBt[ii]==g))),replace = FALSE)
       	}
       	iii = c(iii,iiis)
       }
@@ -389,13 +404,13 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   ii = which(HTmnP_n[,p] >= MnN1 & HTmnP[,p] >0 & SmnP_n[,p] > 0)
   if(length(ii)<6){ii = which(HTmnP_n[,p] > 0 & HTmnP[,p] >0 & SmnP_n[,p] > 0)}
   if(length(ii)>0){     
-    if(length(ii)>MaxSST){
+    if(length(ii)>(2*MaxSST)){
       iii = numeric()
       for (g in 1:Ngrp){
-      	if(length(which(GrpBt[ii]==g)) < 20 ){
+      	if(length(which(GrpBt[ii]==g)) < 50 ){
       		iiis = ii[GrpBt[ii]==g]
       	}else{
-      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS*2,length(which(GrpBt[ii]==g))),replace = FALSE)
       	}
       	iii = c(iii,iiis)
       }
@@ -408,13 +423,13 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   ii = which(LMDmnP_n[,p] >= MnN1)
   if(length(ii)<6){ii = which(LMDmnP_n[,p] > 0)}
   if(length(ii)>0){   
-    if(length(ii)>MaxSST){
+    if(length(ii)>(2*MaxSST)){
       iii = numeric()
       for (g in 1:Ngrp){
-      	if(length(which(GrpBt[ii]==g)) < 20 ){
+      	if(length(which(GrpBt[ii]==g)) < 50 ){
       		iiis = ii[GrpBt[ii]==g]
       	}else{
-      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS,length(which(GrpBt[ii]==g))),replace = FALSE)
+      		iiis = sample(ii[GrpBt[ii]==g],min(MaxSS*2,length(which(GrpBt[ii]==g))),replace = FALSE)
       	}
       	iii = c(iii,iiis)
       }
@@ -431,18 +446,21 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   NLm = length(Lp)
   NCR = length(Cp)  
   #
+  EffortP = TotMinP
+  eta_pri = colSums(EffortP[,-NPtypes]) + 10; eta_pri = 100*(eta_pri/sum(eta_pri))+1
+  
   if(GrpOpt==0){
-    Result = list(Nbouts=NboutsE,K=NPtypes,Km1=NPtypes-1,EffortP=TotMinP,
+    Result = list(Nbouts=NboutsE,K=NPtypes,Km1=NPtypes-1,EffortP=EffortP,
                   NSz=NSz,NHt=NHt,NCR=NCR,NLm=NLm,NU=NU,SZmnU=SZmnU,HTmnU=HTmnU,
                   Sp=Sp,Hp=Hp,Cp=Cp,SZmn=SZmn,HTmn=HTmn,Hsz=Hsz,Hsz_u=Hsz_u,
-                  LMlg=LMlg,Lp=Lp,Lss=Lss,CR_max=CR_max,
+                  LMlg=LMlg,Lp=Lp,Lss=Lss,CR_max=CR_max,eta_pri=eta_pri,MnMass=MnMass,
                   Sss=Sss,Sss_u=Sss_u,Hss=Hss,Hss_u=Hss_u,CRate=CRate,Css=Css,Csz=Csz,
                   Cal_dns_mn=Cal_dns_mn,Cal_dns_sg=Cal_dns_sg,logMass_sg=logMass_sg)
   }else{
-    Result = list(Nbouts=NboutsE,K=NPtypes,Km1=NPtypes-1,EffortP=TotMinP,
+    Result = list(Nbouts=NboutsE,K=NPtypes,Km1=NPtypes-1,EffortP=EffortP,
                   NSz=NSz,NHt=NHt,NCR=NCR,NLm=NLm,NU=NU,SZmnU=SZmnU,HTmnU=HTmnU,
                   Sp=Sp,Hp=Hp,Cp=Cp,SZmn=SZmn,HTmn=HTmn,Hsz=Hsz,Hsz_u=Hsz_u,
-                  LMlg=LMlg,Lp=Lp,Lss=Lss,Lg=Lg,CR_max=CR_max,
+                  LMlg=LMlg,Lp=Lp,Lss=Lss,Lg=Lg,CR_max=CR_max,eta_pri=eta_pri,MnMass=MnMass,
                   Sss=Sss,Sss_u=Sss_u,Hss=Hss,Hss_u=Hss_u,CRate=CRate,Css=Css,Csz=Csz,
                   Cal_dns_mn=Cal_dns_mn,Cal_dns_sg=Cal_dns_sg,logMass_sg=logMass_sg,
                   Ngrp=Ngrp,GrpE=GrpE,Sg=Sg,Hg=Hg,Cg=Cg,Sg_u=Sg_u,Hg_u=Hg_u)

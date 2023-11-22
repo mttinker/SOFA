@@ -13,27 +13,45 @@ params:
  GL7: 0
  GL8: 0
  GL9: 0
- GrpFgHt: 5
+ GrpFgHt: 8
 title: "`r params$rep_title`"
 subtitle: "`r params$rep_subtitle`"
 date: "`r params$rep_date`"
-author: "SOFA created for U.S. Geological Survey and Seattle Aquarium by M.T. Tinker, Nhydra Ecological"
+author: "SOFA created for U.S. Geological Survey and Seattle Aquarium by M.T. Tinker"
 output:
-  html_document: 
-    fig_width: 9
+  pdf_document: 
+    latex_engine: pdflatex
+    extra_dependencies: ["float"]
+figsintext : yes    
+header-includes:
+- \usepackage{caption}
+- \usepackage{longtable}
+- \usepackage{titling}
+- \pretitle{\begin{center}\LARGE\includegraphics[width=18cm]{SOFA_logo.png}\\[\bigskipamount]}
+- \posttitle{\end{center}}  
 editor_options:
   chunk_output_type: console
+
 ---
 
-<img src="SOFA_logo.png" alt="logo" style="height: 140px; width:750px; margin:0px 50px"/>
 <div style="margin-bottom:50px;">
 
+<style type="text/css">
+.main-container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
 ```{r setup, include=FALSE}
+
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
 
 existing_Packages<-as.list(installed.packages()[,1])
 # Add new packages you might need to this line, to check if they're installed and install missing packages
-required_Packages<-c("rstan","ggplot2", "gridExtra", "bayesplot", "dplyr", "gtools","knitr")
+required_Packages<-c("rstan","ggplot2", "gridExtra", "bayesplot", "dplyr", "gtools", "knitr", "kableExtra")
 missing_Packages<- required_Packages[!required_Packages%in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages, repos = "http://cran.us.r-project.org")
 invisible(lapply(required_Packages, require, character.only=T,quietly = T))
@@ -49,6 +67,7 @@ r_mcmc = sample(Nsims,Nsamp,replace = F)
 post = mcmc[r_mcmc,]
 
 ```
+
 
 ## Summary
 
@@ -100,6 +119,9 @@ $$\overline{ER}=\sum\limits_{j=1}^{J}{{{\eta }_{j}}\cdot {{\overline{cr}}_{j}}\c
 
 Diet composition, defined as the proportional contribution (in terms of consumed biomass) of each prey type to the overall diet ($/pi_j$), is calculated as: 
 $${{\pi }_{j}}={\left( {{\eta }_{j}}\cdot {{\overline{cr}}_{j}} \right)}/{\sum\limits_{j=1}^{J}{{{\eta }_{j}}\cdot {{\overline{cr}}_{j}}}}\;$$
+The proportional contribution of each prey type to the UNID prey class is represented by parameter $\upsilon_j$, calculated as:
+$${{\upsilon }_{j}}=\left( 1-{{\omega }_{j}} \right)\cdot {{\pi }_{j}}\cdot {}^{1}\!\!\diagup\!\!{}_{E{{B}_{j}}}\;$$
+where *EB*~j~ is the average biomass per prey item of prey type *j*. 
 
 Finally, the process model can be modified to account for random effects of categorical group variables (age, sex, area, time period) by utilizing a hierarchical approach for certain key parameters.  We allow foraging effort to vary across groups using a Dirichlet-Multinomial approach:
 $${{\eta }_{g,j}}\sim Dirichlet\left( {{\eta }_{j}}\cdot {{\tau }_{G}} \right)$$
@@ -123,6 +145,7 @@ where $\eta_{g,j}$ is the mean proportional allocation of foraging effort to pre
 | ${{\bar{\eta }}_{j}}$ | Proportion of foraging effort allocated to prey type j |
 | ${{\bar{\pi }}_{j}}$ | Proportion of diet (biomass consumed) made up of prey type j |
 | ${{\bar{\omega }}_{j}}$ | Proportion of prey type j identified (not recorded as "un-identified" prey) |
+| ${{\bar{\upsilon }}_{j}}$ | Proportional contribution of prey type j to un-identified prey |
 | $\sigma_{c,j}$ | Std error in log(CR) across bouts for a given prey type |
 | $\sigma_{h,j}$ | Std error in log(H) across bouts for a given prey type |
 | $\sigma_{s,j}$ | Std error in log(S) across bouts for a given prey type |
@@ -142,6 +165,7 @@ where $\eta_{g,j}$ is the mean proportional allocation of foraging effort to pre
 | ${{\eta }_{g,j}}$ | Proportion of foraging effort allocated to prey type j, group g |
 | ${{\pi }_{g,j}}$ | Proportion of diet (biomass consumed) made up of prey type j, group g |
 | ${{\omega }_{g,j}}$ | Proportion of prey type j identified, group g |
+| ${{\upsilon }_{g,j}}$ | Contribution of prey type j to un-identified prey, group g |
 *Note: parameters with 'g' subscripts estimated if by-groups were incorporated in analysis*
 
 ### Relating observation model and process model
@@ -170,8 +194,10 @@ We used standard Markov-Chain Monte Carlo methods to fit the model to the foragi
 Both graphical and tabular results are presented below. In some cases prey types are referred to numerically (e.g. as subscripts for prey-specific parameters), in which case the numbers correspond to prey types as summarized in Table 2. 
 
 ```{r Table2, echo=FALSE}
-kable(dfPtp, row.names = FALSE, align = "l",
-      caption = "**Table 2.** Prey types included in the analysis")
+
+kable(dfPtp, row.names = FALSE, format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Prey types included in the analysis") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -180,8 +206,11 @@ The posterior estimates for net consumption rate (CR) and energy intake rate (ER
 If the SOFA analysis being summarized incorporated group-level differences in foraging behavior (e.g. area-based differences, time-based differences or differences among individual animals), a second series of plots are presented showing the same statistics described above but for each level of the grouping variable(s). `r if(params$show.grptxt){" See Table 2b"}`
 
 ```{r Table2b, echo=FALSE, eval=Grp_TF}
-kable(Grouplist, row.names = FALSE, align = "l",
-      caption = "**Table 2b.** Group levels used for by-group statitics")
+
+kable(Grouplist, row.names = FALSE, 
+			format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Group levels used for by-group statitics") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -192,26 +221,28 @@ Tabular summaries of all statistics (both for all data combined and by group lev
 
 ### Figures, statistics for ALL data 
 
-```{r Fig1, echo=FALSE, warning=FALSE, fig.cap = "Figure 1. Density plot showing posterior distributions for consumption rate (${{\\bar{CR}}}$, g/min) and rate of energy intake (${{\\bar{ER}}}$, kcal/min) for the overall data set"}
-plot_title = "Overall mean Consumption Rate (CR, g/min) and Energy Intake Rate (ER, kcal/min)"
+```{r Fig1, echo=FALSE, warning=FALSE, fig.cap = "Density plot showing posterior distributions for consumption rate (${{\\bar{CR}}}$, g/min) and rate of energy intake (${{\\bar{ER}}}$, kcal/min) for the overall data set"}
+plot_title = "Overall mean Consumption and Energy Intake Rate"
 suppressMessages(print(
 mcmc_areas(post,area_method = c("equal height"),
   pars = c("CRmn", "ERmn"),
-  prob = 0.8) + ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname))  
+  prob = 0.8) + ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) +
+	theme_classic() 
   # scale_x_continuous(name="Parameter value",limits=c(0,30))
 ))
 
 ```
 
-```{r Fig2, echo=FALSE, warning=FALSE, fig.cap = "Figure 2. Density plot showing posterior distributions for $\\pi$~*j*~, the proportion of diet (biomass consumed) made up of prey type *j* "}
+```{r Fig2, echo=FALSE, warning=FALSE, fig.cap = "Density plot showing posterior distributions for $\\pi_j$, the proportion of diet (biomass consumed) made up of prey type j "}
 
-plot_title = "Proportional contribution to diet (by consumed biomass)"
+plot_title = "Proportional contribution to diet (consumed biomass)"
 suppressMessages(print(
 mcmc_areas(post,area_method = c("equal height"),
   pars = paste0("Pi[",seq(1,(NPtypes-1)),"]"),
   prob = 0.8) + 
-  scale_y_discrete(name="Diet Type",labels=dfPtp$Description) +
-  ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) 
+  scale_y_discrete(name="Diet Type",labels=dfPtp$PreyType) +
+  ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) +
+	theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
 ))
 
 ```
@@ -248,51 +279,54 @@ Pclass_stats = Pclass_stats[order(Pclass_stats$ClassN),]
 
 ```
 
-```{r Fig2b, echo=FALSE, warning=FALSE, fig.cap = "Figure 2b. Boxplot showing posterior distributions for diet composition by Prey Class"}
+```{r Fig2b, echo=FALSE, warning=FALSE, fig.cap = "Boxplot showing posterior distributions for diet composition by Prey Class"}
 
-plot_title = "Proportional contribution to diet (by consumed biomass) by Prey Class"
+plot_title = "Proportional contribution to diet (consumed biomass) by Prey Class"
 plt_Cl_pi = ggplot(df_Pclass,aes(x=Prey_Class,y=Pi)) +
 		geom_boxplot(fill="grey") +
-		scale_x_discrete(name="Prey Class",labels=rev(Pclass_stats$Description),
+		scale_x_discrete(name="Prey Class",labels=rev(Pclass_stats$Prey_Class),
 										 limits = rev(levels(df_Pclass$Prey_Class))) +
 		ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) + 
-	  coord_flip() + theme_classic()
+	  coord_flip() + theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
 print(plt_Cl_pi)	
 
 ```
 
-```{r Fig3, echo=FALSE, warning=FALSE, fig.cap = "Figure 3. Caterpiller plot showing posterior distributions for $\\eta$~*j*~, the relative allocation of effort to each prey type *j* "}
+```{r Fig3, echo=FALSE, warning=FALSE, fig.cap = "Caterpiller plot showing posterior distributions for $\\eta_j$, the relative allocation of effort to each prey type j"}
 
 plot_title = "Proportional allocation of foraging effort"
 suppressMessages(print(
 mcmc_intervals(post,
                pars = paste0("eta[",seq(1,(NPtypes-1)),"]")) +
-  scale_y_discrete(name="Diet Type",labels=dfPtp$Description) +
-  ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) 
+  scale_y_discrete(name="Diet Type",labels=dfPtp$PreyType) +
+  ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) +
+	theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
 ))
 
 ```
 
-```{r Fig4, echo=FALSE, warning=FALSE, fig.cap = "Figure 4. Caterpiller plot showing posterior distributions for *er*~*j*~, the rate of energy intake while feeding on each prey type *j* "}
+```{r Fig4, echo=FALSE, warning=FALSE, fig.cap = "Caterpiller plot showing posterior distributions for the rate of energy intake while feeding on each prey type j"}
 
 plot_title = "Rate of Energy Intake (kcal/min) by prey type"
 suppressMessages(print(
 mcmc_intervals(post,
                pars = paste0("ER[",seq(1,(NPtypes-1)),"]")) +
-  scale_y_discrete(name="Diet Type",labels=dfPtp$Description) +
-  ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) 
+  scale_y_discrete(name="Diet Type",labels=dfPtp$PreyType) +
+  ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) +
+	theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
 ))
 
 ```
 
-```{r Fig5, echo=FALSE, warning=FALSE, fig.cap = "Figure 5. Caterpiller plot showing posterior distributions for $\\omega$~*j*~, the probability of positive ID for each prey type *j* "}
+```{r Fig5, echo=FALSE, warning=FALSE, fig.cap = "Caterpiller plot showing posterior distributions for $\\upsilon_j$, the relative contribution to un-identified of each prey type j "}
 
-plot_title = "Probability of positive ID (i.e. not being recorded as 'Un-ID')"
+plot_title = "Proportional contribution of prey types to UNID prey"
 suppressMessages(print(
 mcmc_intervals(post,
-               pars = paste0("Omega[",seq(1,(NPtypes-1)),"]")) +
-  scale_y_discrete(name="Diet Type",labels=dfPtp$Description) +
-  ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) 
+               pars = paste0("upsilon[",seq(1,(NPtypes-1)),"]")) +
+  scale_y_discrete(name="Diet Type",labels=dfPtp$PreyType) +
+  ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname)) +
+	theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
 ))
 
 ```
@@ -302,7 +336,7 @@ mcmc_intervals(post,
 
 `r if(params$show.grptxt){"### Figures, statistics by group level "}`
 
-```{r Fig6, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Figure 6. Density plot showing posterior distributions for rate of energy intake (*ER*~*g*~, kcal/min) for each group level "}
+```{r Fig6, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Density plot showing posterior distributions for rate of energy intake (${{\\bar{ER}}_{g}}$, kcal/min) for each group level "}
 
   if(length(Grpvar)==1){
     Grpvartxt = Grpvar
@@ -310,17 +344,17 @@ mcmc_intervals(post,
     Grpvartxt = paste(Grpvar, collapse = ', ')
   }
 
-  plot_title = paste0("Posterior distributions, Energy Intake Rate (kcal/min) by ", Grpvartxt)
+  plot_title = paste0("Posterior distributions, Energy Intake, by ", Grpvartxt)
   suppressMessages(print(
     mcmc_areas(post,
                pars = paste0("ERgmn[",seq(1,Ngrp),"]"),
                prob = 0.8) + ggtitle(plot_title,subtitle = paste0("Forage data ", Projectname))  
-    + scale_y_discrete(name="Group",labels=Grouplist$Groupname)
+    + scale_y_discrete(name="Group",labels=Grouplist$Groupname) + theme_classic()
   ))
 
 ```
 
-```{r Fig7, fig.height=GrpFgHt, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Figure 7. Caterpiller plots showing posterior distributions for $\\pi$~*g,j*~, the proportion of diet (biomass consumed) made up of prey type *j* for group *g* "}
+```{r Fig7, fig.height=GrpFgHt, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Caterpiller plots showing posterior distributions for $\\pi_{g,j}$, the proportion of diet (biomass consumed) made up of prey type j for group g "}
 
   if(length(Grpvar)==1){
     Grpvartxt = Grpvar
@@ -338,24 +372,24 @@ mcmc_intervals(post,
   if(params$GL7>0){GL = c(GL,params$GL7) }
   if(params$GL8>0){GL = c(GL,params$GL8) }
   if(params$GL9>0){GL = c(GL,params$GL9) }
-  txt1 = paste0("Proportional contribution to diet (by biomass), by ",Grpvartxt,
-                      ", Forage data ",Projectname)
-  plot_title = c(txt1,"","",txt1,"","",txt1,"","")
+
+  plot_title = "Proportional contribution of prey to diet, by group"
   plts = list()
   for(g in 1:length(GL)){
     gl = GL[g]
     plts[[g]] = suppressMessages(mcmc_intervals(post,
                pars = paste0("PiG[",gl,",",seq(1,(NPtypes-1)),"]"),
                prob = 0.8) + 
-      scale_y_discrete(name="Diet Type",labels=dfPtp$Description) +
-      ggtitle(plot_title[g],subtitle = paste0("Group level ",Grouplist[gl,4])) 
+      scale_y_discrete(name="Diet Type",labels=dfPtp$PreyType) +
+      ggtitle(plot_title,subtitle = paste0("Group level ",Grouplist[gl,4])) + 
+      theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
     )
   }
-  grid.arrange(grobs=plts,ncol=min(3,length(GL)))
+  grid.arrange(grobs=plts,ncol=1,nrow=min(3,length(GL)))
 
 ```
 
-```{r Fig8, fig.height=GrpFgHt, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Figure 8. Caterpiller plot showing posterior distributions for *er*~*g,j*~, the rate of energy intake while feeding on each prey type *j* for group *g* "}
+```{r Fig8, fig.height=GrpFgHt, echo=FALSE, warning=FALSE, eval=Grp_TF, fig.cap = "Caterpiller plot showing posterior distributions for the rate of energy intake while feeding on each prey type j for group g "}
 
   if(length(Grpvar)==1){
     Grpvartxt = Grpvar
@@ -374,10 +408,7 @@ mcmc_intervals(post,
   if(params$GL8>0){GL = c(GL,params$GL8) }
   if(params$GL9>0){GL = c(GL,params$GL9) }  
 
-  txt1 = paste0("Rate of Energy Intake (kcal/min) by prey type, by ",Grpvartxt,
-                      ", Forage data ",Projectname)
-  
-  plot_title = c(txt1,"","",txt1,"","",txt1,"","")
+  plot_title = "Rate of Energy Intake by prey type, by group"
   
   plts = list()
   for(g in 1:length(GL)){
@@ -385,11 +416,12 @@ mcmc_intervals(post,
     plts[[g]] = suppressMessages(mcmc_intervals(post,
                pars = paste0("ERg[",gl,",",seq(1,(NPtypes-1)),"]"),
                prob = 0.8) + 
-      scale_y_discrete(name="Diet Type",labels=dfPtp$Description) +
-      ggtitle(plot_title[g],subtitle = paste0("Group level ",Grouplist[gl,4])) 
+      scale_y_discrete(name="Diet Type",labels=dfPtp$PreyType) +
+      ggtitle(plot_title,subtitle = paste0("Group level ",Grouplist[gl,4])) +
+     	theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
     )
   }
-  grid.arrange(grobs=plts,ncol=min(3,length(GL)))
+  grid.arrange(grobs=plts,ncol=1,nrow=min(3,length(GL)))
 
 ```
 
@@ -407,9 +439,11 @@ ii = c(which(vns=="CRmn"),
 paramstats = data.frame(Parameter = c("CR_bar","ER_bar","Lambda_bar"))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 paramstats <- paramstats %>% mutate_if(is.numeric, signif, digits = 4)
-kable(paramstats, row.names = FALSE, align = "l",
-      caption = "**Table 3.** Parameter estimates for consumption rate (${{\\bar{CR}}}$, g/min), rate of energy intake (${{\\bar{ER}}}$, kcal/min), and dive success rate ($\\bar{\\lambda}$) for the overall data set")
- 
+
+kable(paramstats, row.names = FALSE, 
+			format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for consumption rate (${{\\bar{CR}}}$, g/min), rate of energy intake (${{\\bar{ER}}}$, kcal/min), and dive success rate ($\\bar{\\lambda}$) for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -419,8 +453,10 @@ ii = c(which(startsWith(vns,"SZ[")))
 
 paramstats = data.frame(Parameter = c(paste0("S_bar_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 4.** Parameter estimates for mean size, ${{\\bar{S}}_{j}}$ (mm), by prey type, for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for mean size, ${{\\bar{S}}_{j}}$ (mm), by prey type, for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace") 
 
 ```
 
@@ -430,8 +466,10 @@ ii = c(which(startsWith(vns,"HT[")))
 
 paramstats = data.frame(Parameter = c(paste0("H_bar_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 5.** Parameter estimates for mean handling time, ${{\\bar{H}}_{j}}$ (sec), by prey type, for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for mean handling time, ${{\\bar{H}}_{j}}$ (sec), by prey type, for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -441,8 +479,10 @@ ii = c(which(startsWith(vns,"CR[")))
 
 paramstats = data.frame(Parameter = c(paste0("cr_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 6.** Parameter estimates for mean consumption rate by prey type ${{\\bar{cr}}_{j}}$ (g/min), for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for mean consumption rate by prey type ${{\\bar{cr}}_{j}}$ (g/min), for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -452,8 +492,10 @@ ii = c(which(startsWith(vns,"ER[")))
 
 paramstats = data.frame(Parameter = c(paste0("er_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 7.** Parameter estimates for mean energy intake rate by prey type ${{\\bar{er}}_{j}}$ (kcal/min), for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for mean energy intake rate by prey type ${{\\bar{er}}_{j}}$ (kcal/min), for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -464,8 +506,10 @@ ii = c(which(startsWith(vns,"LM[")))
 
 paramstats = data.frame(Parameter = c(paste0("lambda_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 8.** Parameter estimates for $\\lambda$~*j*~, mean dive success rate by prey type, for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for $\\lambda_j$, mean dive success rate by prey type, for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -476,8 +520,10 @@ ii = c(which(startsWith(vns,"phi1[")))
 
 paramstats = data.frame(Parameter = c(paste0("phi_1_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 9.** Estimates for $\\phi$~*1,j*~, intercept parameter for function relating log consumption rate to log size, by prey type, for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\phi_{1,j}$, the intercept parameter for the function relating log consumption rate to log size, by prey type, for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -487,8 +533,10 @@ ii = c(which(startsWith(vns,"phi2[")))
 
 paramstats = data.frame(Parameter = c(paste0("phi_2_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 10.** Estimates for $\\phi$~*2,j*~, slope parameter for function relating log consumption rate to log size, by prey type, for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\phi_{2,j}$, the slope parameter for the function relating log consumption rate to log size, by prey type, for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -498,8 +546,10 @@ ii = c(which(startsWith(vns,"psi1[")))
 
 paramstats = data.frame(Parameter = c(paste0("psi_1_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 11.** Estimates for $\\psi$~*1,j*~, intercept parameter for function relating log handling time to log size, by prey type, for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\psi_{1,j}$, the intercept parameter for the function relating log handling time to log size, by prey type, for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -509,8 +559,10 @@ ii = c(which(startsWith(vns,"psi2[")))
 
 paramstats = data.frame(Parameter = c(paste0("psi_2_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 12.** Estimates for $\\psi$~*2,j*~, slope parameter for function relating log handling time to log size, by prey type, for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\psi_{2,j}$, the slope parameter for the function relating log handling time to log size, by prey type, for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -520,8 +572,10 @@ ii = c(which(startsWith(vns,"eta[")))
 
 paramstats = data.frame(Parameter = c(paste0("eta_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 13.** Estimates for $\\eta$~*j*~, proportional allocation of effort to prey type j, for the overall data set")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\eta_j$, proportional allocation of effort to prey type j, for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -531,17 +585,10 @@ ii = c(which(startsWith(vns,"Pi[")))
 
 paramstats = data.frame(Parameter = c(paste0("pi_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 14.** Estimates for $\\pi$~*j*~, proportion of diet (consumed biomass) consisting of prey type j, for the overall data set")
 
-```
-
-```{r Table14b, echo=FALSE}
-
-ii = c(which(startsWith(vns,"Pi[")))
-
-kable(Pclass_stats[,-2], row.names = FALSE,
-      caption = "**Table 14b.** Estimates for proportion of diet (consumed biomass) by prey Class (standardized definitions), for the overall data set")
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\pi_j$, proportion of diet (consumed biomass) consisting of prey type j, for the overall data set") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -551,8 +598,16 @@ ii = c(which(startsWith(vns,"Omega[")))
 
 paramstats = data.frame(Parameter = c(paste0("omega_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 15.** Estimates for $\\omega$~*j*~, probability that prey type *j* is positively identified (and thus not recorded as 'Un-ID' prey)")
+
+ii = c(which(startsWith(vns,"upsilon[")))
+paramstats2 = data.frame(Parameter = c(paste0("upsilon_",seq(1,(NPtypes-1))) ))
+paramstats2 = cbind(paramstats2,sumstats[ii,c(1,3,4,8,9,10)])
+
+paramstats = rbind(paramstats,paramstats2)
+	
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\omega_j$, probability that prey type j is positively identified (and thus not recorded as 'Un-ID' prey), and $\\upsilon_j$, relative contribution of each prey type to the UNID prey category.") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -580,8 +635,10 @@ if(Grp_TF){
 }
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 paramstats <- paramstats %>% mutate_if(is.numeric, signif, digits = 4)
-kable(paramstats, row.names = FALSE, align = "l",
-      caption = "**Table 16.** Estimates for model variance and precision parameters. Prey-specific standard error values are shown for log-normally distributed observed variables of prey size ($\\sigma_{s,j}$), handling time ($\\sigma_{h,j}$), consumption rate ($\\sigma_{c,j}$) and dive success rate ($\\sigma_{l,j}$). Also shown are precision parameters for Dirichlet distributions that describe the relative frequencies of different prey types. Precision parameters determine the consistency in diet composition across bouts ($\\tau$~*b*~) and, if applicable, across different groups ($\\tau$~*g*~)") 
+
+kable(paramstats, row.names = FALSE, format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for model variance and precision parameters. Prey-specific standard error values are shown for log-normally distributed observed variables of prey size ($\\sigma_{s,j}$), handling time ($\\sigma_{h,j}$), consumption rate ($\\sigma_{c,j}$) and dive success rate ($\\sigma_{l,j}$). Also shown are precision parameters for Dirichlet distributions that describe the relative frequencies of different prey types. Precision parameters determine the consistency in diet composition across bouts ($\\tau_b$) and, if applicable, across different groups ($\\tau_g$)")  %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -602,8 +659,10 @@ paramstats = data.frame(Parameter = c(paste0("CR_",seq(1,Ngrp)),
 
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 paramstats <- paramstats %>% mutate_if(is.numeric, signif, digits = 4)
-kable(paramstats, row.names = FALSE, align = "l",
-      caption = "**Table 17.** Parameter estimates for consumption rate (*CR*~*g*~, g/min), rate of energy intake (*ER*~*g*~, kcal/min) and dive success rate ($\\lambda$) for each group level *g*")
+
+kable(paramstats, row.names = FALSE, format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for consumption rate (${{\\bar{CR}}_g}$, g/min), rate of energy intake (${{\\bar{ER}}_g}$, kcal/min) and dive success rate ($\\lambda_g$) for each group level g") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -618,8 +677,10 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("S_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 18.** Parameter estimates for mean size, *S*~*g,j*~, by group level *g* and by prey type *j*")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for mean size, ${{\\bar{S}}_{g,j}}$, by group level g and by prey type j") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -634,9 +695,10 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("H_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 19.** Parameter estimates for mean handling time, *H*~*g,j*~, by group level *g* and by prey type *j*")
 
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for mean handling time, ${{\\bar{H}}_{g,j}}$, by group level g and by prey type j") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 ```
 
 ```{r Table20, eval=Grp_TF, echo=FALSE}
@@ -650,8 +712,10 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("cr_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 20.** Parameter estimates for mean consumption rate *cr*~*g,j*~, by group level *g* and by prey type *j*")
+
+kable(paramstats, row.names = FALSE, format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for mean consumption rate, ${{\\bar{cr}}_{g,j}}$, by group level g and by prey type j") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -666,8 +730,10 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("er_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 21.** Parameter estimates for mean energy intake rate *er*~*g,j*~, (kcal/min), by group level *g* and by prey type *j*")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for mean energy intake rate, ${{\\bar{er}}_{g,j}}$ (kcal/min), by group level g and by prey type j") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -683,8 +749,10 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("lambda_",rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 22.** Parameter estimates for $\\lambda$~*g,j*~, mean dive success rate by group level *g* and by prey type *j*")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Parameter estimates for $\\lambda_{g,j}$, mean dive success rate by group level g and by prey type j") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -700,8 +768,10 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("phi_1_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 23.** Estimates for $\\phi$~*1,g,j*~, intercept parameter for function relating log consumption rate to log size, for each group *g* and prey type *j*")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\phi_{1,g,j}$, intercept parameter for function relating log consumption rate to log size, for each group g and prey type j") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -716,8 +786,10 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("psi_1_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 24.** Estimates for $\\psi$~*1,g,j*~, intercept parameter for function relating log handling time to log size, for each group *g* and prey type *j*")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\psi_{1,g,j}$, intercept parameter for function relating log handling time to log size, for each group g and prey type j") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -732,8 +804,10 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("eta_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 25.** Estimates for $\\eta$~*g,j*~, proportional allocation of effort to prey type j, for each group level *g*")
+
+kable(paramstats, row.names = FALSE, format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\eta_{g,j}$, proportional allocation of effort to prey type j, for each group level g") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -748,8 +822,10 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("pi_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 26.** Estimates for $\\pi$~*g,j*~, proportion of diet (consumed biomass) consisting of prey type j, for each group level *g*")
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\pi_{g,j}$, proportion of diet (consumed biomass) consisting of prey type j, for each group level g") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 
@@ -764,8 +840,22 @@ for(i in 1:Ngrp){
 
 paramstats = data.frame(Parameter = c(paste0("omega_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
-kable(paramstats, row.names = FALSE,
-      caption = "**Table 27.** Estimates for $\\omega$~*g,j*~, probability that prey type *j* is positively identified (and thus not recorded as 'Un-ID' prey) for each group level *g* ")
+
+ii = numeric()
+for(i in 1:Ngrp){
+	for(j in 1:(NPtypes-1)){
+		ii = c(ii,which(vns==paste0("upsilonG[",i,",",j,"]")))
+	}
+}
+
+paramstats2 = data.frame(Parameter = c(paste0("upsilon_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
+paramstats2 = cbind(paramstats2,sumstats[ii,c(1,3,4,8,9,10)])
+
+paramstats = rbind(paramstats,paramstats2)
+
+kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
+      caption = "Estimates for $\\omega_{g,j}$, probability that prey type j is positively identified (and thus not recorded as 'Un-ID' prey) for each group level g, and $\\upsilon_{g,j}$, relative contribution of prey type j to 'Un-ID' prey category for each group level g") %>%
+  kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
 

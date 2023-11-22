@@ -53,6 +53,11 @@ ii = which(is.na(dat$Ageclass))
 dat$Ageclass[ii] = "u"
 ii = which(dat$Ageclass!="j" & dat$Ageclass!="sa" & dat$Ageclass!="a" & dat$Ageclass!="aa" & dat$Ageclass!="u")
 dat$Ageclass[ii] = "u"
+
+# ** for size codes of 9 or other "illegal" values, set to NA
+dat$Size[dat$Size>4] = NA
+# **
+
 # Remove bouts with no observed successful dives (or <25% successful) 
 NoDiveSucc = 1
 while(NoDiveSucc>0){
@@ -282,8 +287,9 @@ for(i in 1:NPcodes){
       }
       wts = wts/max(wts)
       Ped[i] = mean(P_ed)
-      x = log(dfM$MaxLinearDim_mm[jj]); y = log(dfM$TotWetMass[jj])
-      ft = rlm(y ~ x,weights = wts, method = "MM")
+      # NOTE: 
+      x = log(dfM$MaxLinearDim_mm[jj]); y = log(dfM$EdblWetMass[jj])
+      ft = rlm(y ~ x,weights = wts, method = "M",maxit = 50)
       xx = seq(min(x),max(x),by=.05)
       # plot(x,y,main=dfPr$PreyCode[i])
       # lines(xx,predict(ft,newdata = data.frame(x=xx)),col="red")
@@ -307,7 +313,8 @@ for(i in 1:NPcodes){
     if(dfPr$PreyType[i] != "UNID"){
       jj = which(dat$Prey==dfPr$PreyCode[i] & !is.na(dat$Sz_mm) )
       if(length(jj)>0){
-        dat$Mass_est[jj] = exp( apar[i] + bpar[i] * log(dat$Sz_mm[jj]) ) * Ped[i]
+      	# NOTE: Changed to using edibible wet biomass, so do not mult by Ppn Edible 
+        dat$Mass_est[jj] = exp( apar[i] + bpar[i] * log(dat$Sz_mm[jj]) ) # * Ped[i]
         dat$Edns_est[jj] = Edns[i]
         dat$SE_lgmss[jj] = SE_lgmss[i]
         dat$SE_Edens[jj] = SE_Edens[i]

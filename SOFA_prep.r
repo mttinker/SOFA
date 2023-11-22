@@ -118,9 +118,9 @@ SpcnmE = character()
 for (i in 1:nrow(dfPL_Spc)){
 	sp = dfPL_Spc$SppCode[i]
 	iim = which(dfPL_MssLn$SppCode==sp & !is.na(dfPL_MssLn$MaxLinearDim_mm) & 
-								!is.na(dfPL_MssLn$TotWetMass))
+								!is.na(dfPL_MssLn$EdibleWetMass))
 	iie = which(dfPL_Enrgy$SppCode==sp & !is.na(dfPL_Enrgy$kcal_g_edblwet))
-	if(length(iim) >= 4 & length(iie)>0){
+	if(length(iim) >= 2 & length(iie)>0){
 		iis = c(iis,i)
 		iims = c(iims,iim)
 		iien = c(iien,iie)
@@ -140,7 +140,9 @@ Mass_lng_dat = data.frame(PreyCat1 = PryctM,
 													SppCode = dfPL_MssLn$SppCode[iims],
 													Region = dfPL_MssLn$Region[iims],
 													MaxLinearDim_mm = dfPL_MssLn$MaxLinearDim_mm[iims],
-													TotWetMass = dfPL_MssLn$TotWetMass[iims])
+													EdblWetMass = dfPL_MssLn$EdibleWetMass[iims],
+													TotWetMass = dfPL_MssLn$TotWetMass[iims],
+													Prpn_Edible = dfPL_MssLn$Prpn_Edible[iims])
 Energy_dat = data.frame(PreyCat1 = PryctE,
 												SpeciesName = SpcnmE,
 												SppCode = dfPL_Enrgy$SppCode[iien],

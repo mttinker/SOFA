@@ -11,6 +11,8 @@ require(parallel)
 #require(rstan)
 library(cmdstanr)
 library(posterior)
+library(ggplot2)
+library(bayesplot)
 rstan::rstan_options(javascript=FALSE)
 #
 # Create Generic function for stopping script in case of error:
@@ -158,7 +160,11 @@ if (rspns=="yes"){
 		if(!is.na(dfPr$PreyType[pr])){
 			if(dfPr$PreyType[pr] != "UNID"){
 				ft = MassLngFits[[pr]]
-				plot(exp(ft$model$x),exp(ft$model$y),main=dfPr$Description[pr],
+				apar = as.numeric(coef(ft)[1])
+				bpar = as.numeric(coef(ft)[2])
+				plot(exp(ft$model$x),exp(ft$model$y),
+						 main= paste0( dfPr$Description[pr] ,", M=a*L^b, a = ", 
+						 							round( exp(apar), digits = 5) ,", b = ", round(bpar,digits = 3) ),
 						 xlab="size (mm)",ylab="mass (g)")
 				lines(exp(ft$prdct$x),exp(ft$prdct$ypred),col="red")
 				# exp(ft$coefficients[1] + ft$coefficients[2]*log(44.23413))
@@ -225,19 +231,25 @@ cores = detectCores()
 ncore = max(3,min(20,cores-3))
 Niter = round(nsamples/ncore)
 #
+if(Niter>500){
+	thinval = max(1,round(Niter/500))
+}else{
+	thinval = 1
+}
+
 if(GrpOpt==0){
 	params <- c("tauB","maxPunid","CRmn","ERmn","LMmn","SZ","SZ_u",
-							"HT","HT_u","CR","ER","eta","Pi","Omega",
+							"HT","HT_u","CR","ER","eta","Pi","upsilon","Omega",
 							"phi1","phi2","psi1","psi2","LM",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u","sigLM") 
 							# "muSZ","muSZ_u","psi1_u","psi2_u",
 }else{
 	params <- c("tauB","tauG","maxPunid","CRmn","ERmn","LMmn","SZ",
-							"SZ_u","HT","HT_u","CR","ER","eta","Pi",
+							"SZ_u","HT","HT_u","CR","ER","eta","Pi","upsilon",
 							"Omega","phi1","phi2","psi1","psi2","LM",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u","sigLM",
 						 	"CRgmn","ERgmn","LMgmn","SZg","SZg_u","HTg","CRg","ERg",
-					  	"LMg","etaG","PiG","OmegaG","phi1G","psi1G",
+					  	"LMg","etaG","PiG","upsilonG","OmegaG","phi1G","psi1G",
 							"sg1","sg2","sg3","sg4","sg5","sg6") 
 							# "muSZ","muSZ_u","muSZG","muSZG_u","psi1_u","psi2_u","psi1G_u",
 }
@@ -269,28 +281,33 @@ suppressMessages(
 			seed = 123,
 			chains = ncore,
 			parallel_chains = ncore,
-			refresh = 100,
+			refresh = 200,
 			iter_warmup = nburnin,
-			iter_sampling = Niter
+			iter_sampling = Niter,
+			thin = thinval
 			# max_treedepth = 14,
 			# adapt_delta = 0.9,
 		)
 	)
 )
 #
-sumstats = as.data.frame(fit$summary(variables = params))
+# if error, run: fit$output(1)
+fit_draws = fit$draws(params)
+sumstats = fit_draws %>% 
+	summarise_draws(mean, mcse = mcse_mean, sd, 
+									~quantile(.x, probs = c(0.025, 0.05, .5, .95, .975), na.rm=T),
+									N_eff = ess_bulk, rhat)
+sumstats = as.data.frame(sumstats)
 row.names(sumstats) = sumstats$variable; sumstats = sumstats[,-1] 
-tmp = as.data.frame(fit$summary(variables = params, mcse = mcse_mean, ~quantile(.x, probs = c(0.025, 0.975))))
-sumstats$mcse = tmp$mcse; sumstats$q2.5 = tmp$`2.5%` ; sumstats$q97.5 = tmp$`97.5%`; 
-sumstats$q50 = sumstats$median; sumstats$N_eff = sumstats$ess_bulk
-col_order = c("mean", "mcse", "sd","q2.5","q5","q50","q95","q97.5","N_eff", "rhat")
-sumstats = sumstats[, col_order]
-mcmc = as_draws_matrix(fit$draws(variables = params))
-vn = colnames(mcmc); vns = row.names(sumstats)
-Nsims = nrow(mcmc)
-paramnames = params
+colnames(sumstats) = c("mean", "mcse", "sd","q2.5","q5","q50","q95","q97.5","N_eff", "rhat")
 #
-rm(mod,fit,tmp,col_order,params)
+mcmc = as_draws_matrix(fit_draws,variables = parms)
+Nsims = nrow(mcmc)
+mcmc_array = as_draws_array(fit_draws,variables = parms)
+vn = colnames(mcmc); vns = row.names(sumstats)
+paramnames = params
+
+rm(mod,fit,params,fit_draws)
 #
 # save image file of results for post-fit processing and review:
 dir.create(paste0("./projects/",Projectname,"/results"),showWarnings = F)
@@ -316,3 +333,30 @@ fintxt = c("That completes model fitting, check psrf values and other diagnostic
 					 "The results have been saved to the 'results' sub-folder of the project. ",
 					 "You can view summary plots and tables by running the 'SOFA_sum' script. ")
 dlg_message(fintxt)
+
+# Diagnostic plots----------------------
+# color_scheme_set("brewer-Set1")
+# mcmc_trace(mcmc_array,pars=("ERmn")) + theme_classic()
+# mcmc_trace(mcmc_array,pars=("ER[3]")) + theme_classic()
+# mcmc_trace(mcmc_array,pars=("eta[3]")) + theme_classic()
+# 
+# color_scheme_set("brightblue")
+# mcmc_areas(mcmc, pars= ("ERmn"),
+# 					 area_method="equal height",
+# 					 prob = 0.8)
+# 
+# mcmc_areas(mcmc, pars= vn[startsWith(vn,"Pi[")],
+# 					 area_method="equal height",
+# 					 prob = 0.8)
+# 
+# mcmc_areas(mcmc, pars= vn[startsWith(vn,"eta[")],
+# 					 area_method="equal height",
+# 					 prob = 0.8)
+# 
+# mcmc_areas(mcmc, pars= vn[startsWith(vn,"ER[")],
+# 					 area_method="equal height",
+# 					 prob = 0.8)
+# 
+# mcmc_areas(mcmc, pars= vn[startsWith(vn,"Omega[")],
+# 					 area_method="equal height",
+# 					 prob = 0.8)
