@@ -20,7 +20,7 @@ date: "`r params$rep_date`"
 author: "SOFA created for U.S. Geological Survey and Seattle Aquarium by M.T. Tinker"
 output:
   pdf_document: 
-    latex_engine: pdflatex
+    latex_engine: pdflatex # xelatex 
     extra_dependencies: ["float"]
 figsintext : yes    
 header-includes:
