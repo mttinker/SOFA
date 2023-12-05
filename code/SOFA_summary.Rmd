@@ -3,17 +3,12 @@ params:
  rep_title: "Sea otter foraging analysis (SOFA) V. 2.*" 
  rep_subtitle: "(project and results filename)" 
  rep_date: "10/20/2020" 
- show.grptxt: TRUE
- GL1: 1
- GL2: 2
+ show.grptxt: FALSE
+ GL1: 0
+ GL2: 0
  GL3: 0
  GL4: 0
- GL5: 0
- GL6: 0
- GL7: 0
- GL8: 0
- GL9: 0
- GrpFgHt: 8
+ GrpFgHt: 10
 title: "`r params$rep_title`"
 subtitle: "`r params$rep_subtitle`"
 date: "`r params$rep_date`"
@@ -367,11 +362,6 @@ mcmc_intervals(post,
   if(params$GL2>0){GL = c(GL,params$GL2) }
   if(params$GL3>0){GL = c(GL,params$GL3) }
   if(params$GL4>0){GL = c(GL,params$GL4) }
-  if(params$GL5>0){GL = c(GL,params$GL5) }
-  if(params$GL6>0){GL = c(GL,params$GL6) }
-  if(params$GL7>0){GL = c(GL,params$GL7) }
-  if(params$GL8>0){GL = c(GL,params$GL8) }
-  if(params$GL9>0){GL = c(GL,params$GL9) }
 
   plot_title = "Proportional contribution of prey to diet, by group"
   plts = list()
@@ -385,7 +375,7 @@ mcmc_intervals(post,
       theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
     )
   }
-  grid.arrange(grobs=plts,ncol=1,nrow=min(3,length(GL)))
+  grid.arrange(grobs=plts,ncol=1,nrow=length(GL))
 
 ```
 
@@ -402,11 +392,6 @@ mcmc_intervals(post,
   if(params$GL2>0){GL = c(GL,params$GL2) }
   if(params$GL3>0){GL = c(GL,params$GL3) }
   if(params$GL4>0){GL = c(GL,params$GL4) }
-  if(params$GL5>0){GL = c(GL,params$GL5) }
-  if(params$GL6>0){GL = c(GL,params$GL6) }
-  if(params$GL7>0){GL = c(GL,params$GL7) }
-  if(params$GL8>0){GL = c(GL,params$GL8) }
-  if(params$GL9>0){GL = c(GL,params$GL9) }  
 
   plot_title = "Rate of Energy Intake by prey type, by group"
   
@@ -421,7 +406,7 @@ mcmc_intervals(post,
      	theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
     )
   }
-  grid.arrange(grobs=plts,ncol=1,nrow=min(3,length(GL)))
+  grid.arrange(grobs=plts,ncol=1,nrow=length(GL))
 
 ```
 

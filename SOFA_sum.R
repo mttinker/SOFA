@@ -48,33 +48,53 @@ file.copy(resultsfilename,
 					# "Results.rdata",overwrite = TRUE)
 					paste0("./code/","Results.rdata"),overwrite = TRUE)
 #
-GL1 = 1; GL2 = 0; GL3 = 0; GL4 = 1; GL5 = 0; GL6 = 0; GL7 = 1; GL8 = 0; GL9 = 0; 
-GrpFgHt = 5
 
+GrpFgHt = 10
+GL1 = 0; GL2 = 0; GL3 = 0; GL4 = 0; 
 if(Grp_TF){
+	iiog = numeric()
 	# attach("Results.rdata"); Grouplist <- Grouplist; detach("file:Results.rdata")
 	attach("./code/Results.rdata"); Grouplist <- Grouplist; detach("file:./code/Results.rdata")
-	dlg_message(c("This results file has by-groups. You can select up to 9 sample group levels ",
-								"for generating certain plots that show statistics by group level.",
-								"(Tables of stats will still be generated for all group levels)"), "ok")
+	dlg_message(c("This results file has by-groups. Next you can select 2 - 4 sample group levels ",
+								"for generating plots comparing prey-level statistics by group level.",
+								"(Tables of group-specific parameters will be generated for all group levels)"), "ok")
 	Grplevsamp = tk_select.list(Grouplist$Groupname, preselect = NULL, multiple = TRUE,
 														title = "Select group levels" ) 
-	Grplevsamp = Grplevsamp[1:min(9,length(Grplevsamp))]
-	GL1 = which(Grouplist$Groupname==Grplevsamp[1])
-	if(length(Grplevsamp)>1){GL2 = which(Grouplist$Groupname==Grplevsamp[2])}else{GL2=0}
-	if(length(Grplevsamp)>2){GL3 = which(Grouplist$Groupname==Grplevsamp[3])}else{GL3=0}
-	if(length(Grplevsamp)>3){GL4 = which(Grouplist$Groupname==Grplevsamp[4])}else{GL4=0}
-	if(length(Grplevsamp)>4){GL5 = which(Grouplist$Groupname==Grplevsamp[5])}else{GL5=0}
-	if(length(Grplevsamp)>5){GL6 = which(Grouplist$Groupname==Grplevsamp[6])}else{GL6=0}
-	if(length(Grplevsamp)>6){GL7 = which(Grouplist$Groupname==Grplevsamp[7])}else{GL7=0}
-	if(length(Grplevsamp)>7){GL8 = which(Grouplist$Groupname==Grplevsamp[8])}else{GL8=0}
-	if(length(Grplevsamp)>8){GL9 = which(Grouplist$Groupname==Grplevsamp[9])}else{GL9=0}
-	
-	if(length(Grplevsamp)<4){GrpFgHt = 5}
-	if(length(Grplevsamp)>3 & length(Grplevsamp)<7){GrpFgHt = 10}
-	if(length(Grplevsamp)>6){GrpFgHt = 15}
-
-	rm(Grplevsamp)
+	if(length(Grplevsamp)==0){ # In case user selects 0 groups, select the first 2 or 3 for them...
+		for(g in 1:min(3,length(Grouplist$Groupname))){
+			if(g==1){
+				GL1 = 1
+			}else if(g==2){
+				GL2 = 2
+			}else if(g==3){
+				GL3 = 3
+			}
+		}
+	}else if(length(Grplevsamp)==1){ # In case user selects only 1 group, select some others...
+		for(g in 1:min(3,length(Grouplist$Groupname))){
+			iiog = which(Grouplist$Groupname != Grplevsamp[1])
+			if(g==1){
+				GL1 = which(Grouplist$Groupname==Grplevsamp[1])
+			}else if(g==2){
+				GL2 = iiog[1]
+			}else if(g==3){
+				GL3 = iiog[2]
+			}
+		}
+	}else{ # or, assuming the user actually follows instructions, use the first 4 they select...
+		for(g in 1:min(4,length(Grplevsamp))){
+			if(g==1){
+				GL1 = which(Grouplist$Groupname==Grplevsamp[1])
+			}else if(g==2){
+				GL2 = which(Grouplist$Groupname==Grplevsamp[2])
+			}else if(g==3){
+				GL3 = which(Grouplist$Groupname==Grplevsamp[3])
+			}else if(g==4){
+				GL4 = which(Grouplist$Groupname==Grplevsamp[4])
+			}
+		}
+	}
+	rm(Grplevsamp,iiog)
 }
 rspnse = dlg_message(c("About to render an html rmarkdown report summarizing model results, ",
 											 "which could take a few minutes to complete. ",
@@ -96,9 +116,8 @@ render(rmd_pathname,
 			 output_file = output_filename,
 			 params = list(rep_title = title, rep_subtitle = subtitle, 
 			 							rep_date = Daterun, show.grptxt = Grp_TF,
-			 							GL1 = GL1, GL2=GL2, GL3=GL3,
-			 							GL4 = GL4, GL5=GL5, GL6=GL6,
-			 							GL7 = GL7, GL8=GL8, GL9=GL9,GrpFgHt=GrpFgHt)) # 
+			 							GL1 = GL1, GL2 = GL2, GL3 = GL3, GL4 = GL4, 
+			 							GrpFgHt = GrpFgHt)) # 
 
 file.copy(file.path(tmpdir,output_filename),output_dirname, overwrite = T)
 
