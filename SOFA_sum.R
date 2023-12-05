@@ -85,13 +85,23 @@ if(rspnse == "cancel"){
 vers = read.csv("./code/Version.csv"); vers = vers$Version
 title = paste0("~~~ Sea otter foraging analysis (SOFA) ",vers," ~~~ ")
 subtitle = paste0("Project: ", Projectname, ", Results file: ",rdata_file)
+output_dirname =  paste0("./projects/",Projectname)
+output_filename = "SOFA_summary.pdf"
+rmd_pathname = "./code/SOFA_summary.Rmd"
+tmpdir <- tempdir()
 Daterun = Sys.Date()
-render("./code/SOFA_summary.Rmd",
-			 output_dir = paste0("./projects/",Projectname),
-			 output_file = "SOFA_summary.pdf",
+
+render(rmd_pathname,
+			 output_dir = tmpdir, # NOTE: need to compile to tmpdir to avoid pathname with spaces (#*^# Microsoft!)
+			 output_file = output_filename,
 			 params = list(rep_title = title, rep_subtitle = subtitle, 
 			 							rep_date = Daterun, show.grptxt = Grp_TF,
 			 							GL1 = GL1, GL2=GL2, GL3=GL3,
 			 							GL4 = GL4, GL5=GL5, GL6=GL6,
 			 							GL7 = GL7, GL8=GL8, GL9=GL9,GrpFgHt=GrpFgHt)) # 
+
+file.copy(file.path(tmpdir,output_filename),output_dirname, overwrite = T)
+
+on.exit(unlink(tmpdir))
+
 dlg_message(c("The results can be viewed by opening 'SOFA_summary' in the projecy folder"), "ok")
