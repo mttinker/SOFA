@@ -162,6 +162,13 @@ if (rspns=="yes"){
 				ft = MassLngFits[[pr]]
 				apar = as.numeric(coef(ft)[1])
 				bpar = as.numeric(coef(ft)[2])
+				
+				
+				# *** ADD OPTION TO NOT WEIGHT BY PROXY SAMPLE SIZE 
+				#  AND ADD SYMBOLS OR COLORS TO PLOTS FOR PROXY SPECIES
+				
+				
+				
 				plot(exp(ft$model$x),exp(ft$model$y),
 						 main= paste0( dfPr$Description[pr] ,", M=a*L^b, a = ", 
 						 							round( exp(apar), digits = 5) ,", b = ", round(bpar,digits = 3) ),

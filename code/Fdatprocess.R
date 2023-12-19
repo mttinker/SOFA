@@ -204,49 +204,52 @@ iic = which(dat$SuccessV==0.5 & dat$Divenum==1)
 dat$SuccessV[iic] = 1
 dat$Tmtag[iic]=1
 iic = which(dat$SuccessV==0.5)
-for (i in 1:length(iic)){
-  ii = iic[i]
-  iicc = which(dat$BoutN == dat$BoutN[ii] & dat$DiveN==dat$DiveN[ii])
-  successchk = 0
-  gobak = 0
-  while(successchk==0){
-    gobak = gobak + 1
-    iipr = which(dat$BoutN == dat$BoutN[ii] & dat$DiveN==(dat$DiveN[ii]-gobak))
-    # If beginning of carry over sequence is success = N, fix it
-    prvsuc = dat$SuccessV[iipr[1]]
-    if(is.na(prvsuc)){
-      if(is.na(dat$Prey[ii])){
-        dat$SuccessV[iicc] = rep(0,length(iicc))
-        successchk = -1
-      }else{
-        dat$SuccessV[iicc] = rep(1,length(iicc))
-        successchk = -1
+# If any carry-over dives, make sure prey type is assigned to correct (original) prey
+if(length(iic)>0){
+  for (i in 1:length(iic)){
+    ii = iic[i]
+    iicc = which(dat$BoutN == dat$BoutN[ii] & dat$DiveN==dat$DiveN[ii])
+    successchk = 0
+    gobak = 0
+    while(successchk==0){
+      gobak = gobak + 1
+      iipr = which(dat$BoutN == dat$BoutN[ii] & dat$DiveN==(dat$DiveN[ii]-gobak))
+      # If beginning of carry over sequence is success = N, fix it
+      prvsuc = dat$SuccessV[iipr[1]]
+      if(is.na(prvsuc)){
+        if(is.na(dat$Prey[ii])){
+          dat$SuccessV[iicc] = rep(0,length(iicc))
+          successchk = -1
+        }else{
+          dat$SuccessV[iicc] = rep(1,length(iicc))
+          successchk = -1
+        }
+      }else if(prvsuc==0){
+        if(is.na(dat$Prey[ii])){
+          dat$SuccessV[iicc] = rep(0,length(iicc))
+          successchk = -1
+        }else{
+          dat$SuccessV[iicc] = rep(1,length(iicc))
+          successchk = -1
+        }
+      }else if(prvsuc==1){
+        successchk = 1
       }
-    }else if(prvsuc==0){
-      if(is.na(dat$Prey[ii])){
-        dat$SuccessV[iicc] = rep(0,length(iicc))
-        successchk = -1
-      }else{
-        dat$SuccessV[iicc] = rep(1,length(iicc))
-        successchk = -1
-      }
-    }else if(prvsuc==1){
-      successchk = 1
     }
-  }
-  if(length(iicc)==1 & length(iipr)==1 & successchk >0){
-    if(is.na(dat$PreyV[ii]) | dat$PreyV[ii]==NPtypes){
+    if(length(iicc)==1 & length(iipr)==1 & successchk >0){
+      if(is.na(dat$PreyV[ii]) | dat$PreyV[ii]==NPtypes){
+        if(is.na(dat$PreyV[iipr[1]]) | dat$PreyV[iipr[1]]==NPtypes){
+          dat$PreyV[ii] = NPtypes
+        }else{
+          dat$PreyV[ii] = dat$PreyV[iipr[1]]
+        }
+      }
       if(is.na(dat$PreyV[iipr[1]]) | dat$PreyV[iipr[1]]==NPtypes){
-        dat$PreyV[ii] = NPtypes
-      }else{
-        dat$PreyV[ii] = dat$PreyV[iipr[1]]
+        dat$PreyV[iipr[1]] = dat$PreyV[ii]
       }
-    }
-    if(is.na(dat$PreyV[iipr[1]]) | dat$PreyV[iipr[1]]==NPtypes){
-      dat$PreyV[iipr[1]] = dat$PreyV[ii]
-    }
-    if( dat$PreyV[ii] != dat$PreyV[iipr[1]] ){
-      dat$SuccessV[ii] = 1
+      if( dat$PreyV[ii] != dat$PreyV[iipr[1]] ){
+        dat$SuccessV[ii] = 1
+      }
     }
   }
 }
