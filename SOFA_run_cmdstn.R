@@ -238,8 +238,8 @@ cores = detectCores()
 ncore = max(3,min(20,cores-3))
 Niter = round(nsamples/ncore)
 #
-if(Niter>500){
-	thinval = max(1,round(Niter/500))
+if(Niter>250){
+	thinval = max(1,round(Niter/250))
 }else{
 	thinval = 1
 }

@@ -249,8 +249,12 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   set.seed(123)
   for (p in 1:(NPtypes-1)){
     #
-    ii = which(Fdat$PreyV==p)
-    MnMass[p] = mean(Fdat$Mass_est[ii],na.rm=T)
+    ii = which(Fdat$PreyV==p & !is.na(Fdat$Mass_est) )
+    if(length(ii) == 0){
+      MnMass[p] = 10
+    }else{
+      MnMass[p] = mean(Fdat$Mass_est[ii],na.rm=T)
+    }
     #
     ii = which(SmnP_n[,p] >= MnN1)
     if(length(ii)<6){ii = which(SmnP_n[,p] > 0)}

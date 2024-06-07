@@ -335,10 +335,20 @@ Cal_dns_mn = numeric(length = NPtypes-1)
 Cal_dns_sg = numeric(length = NPtypes-1)
 logMass_sg = numeric(length = NPtypes-1)
 for(i in 1:(NPtypes-1)){
-  jj = which(dat$PreyT==dfPtp$PreyType[i])
-  Cal_dns_mn[i] = mean(dat$Edns_est[jj],na.rm = T)
-  Cal_dns_sg[i] = mean(dat$SE_Edens[jj],na.rm = T)
-  logMass_sg[i] = mean(dat$SE_lgmss[jj],na.rm = T)
+  jj = which(dat$PreyT==dfPtp$PreyType[i] & !is.na(dat$Edns_est) & !is.na(dat$SE_Edens))
+  if(length(jj)==0){
+    Cal_dns_mn[i] = 0.5
+    Cal_dns_sg[i] = 0.15   
+  }else{
+    Cal_dns_mn[i] = mean(dat$Edns_est[jj],na.rm = T)
+    Cal_dns_sg[i] = mean(dat$SE_Edens[jj],na.rm = T)
+  }
+  jj = which(dat$PreyT==dfPtp$PreyType[i] & !is.na(dat$SE_lgmss) )
+  if(length(jj)==0){
+    logMass_sg[i] = 0.1 
+  }else{
+    logMass_sg[i] = mean(dat$SE_lgmss[jj],na.rm = T)
+  }
 }
 PPnlost = dat$Prop_lost
 PPnlost[is.na(PPnlost)] = 0
