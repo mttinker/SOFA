@@ -107,7 +107,7 @@ title = paste0("~~~ Sea otter foraging analysis (SOFA) ",vers," ~~~ ")
 subtitle = paste0("Project: ", Projectname, ", Results file: ",rdata_file)
 output_dirname =  paste0("./projects/",Projectname)
 output_filename = "SOFA_summary.pdf"
-rmd_pathname = "./code/SOFA_summary.Rmd"
+rmd_pathname = "./code/SOFA_summary_v3.Rmd"
 tmpdir <- tempdir()
 Daterun = Sys.Date()
 

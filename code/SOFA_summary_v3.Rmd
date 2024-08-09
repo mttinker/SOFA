@@ -2,7 +2,7 @@
 params:
  rep_title: "Sea otter foraging analysis (SOFA) V. 3.*" 
  rep_subtitle: "(project and results filename)" 
- rep_date: "1/1/2024" 
+ rep_date: "8/1/2024" 
  show.grptxt: FALSE
  GL1: 0
  GL2: 0
@@ -62,12 +62,9 @@ post = mcmc[r_mcmc,]
 
 ```
 
-
 ## Summary
 
-This report summarizes the results of an analysis of sea otter observation-based foraging data. The analytic approach is referred to as the "Sea Otter Foraging Analysis", or SOFA. Standard variables recorded in the field from foraging sea otters - duration of dive and surface intervals, prey captures, prey sizes, etc. - are first summarized for all the dives in each feeding bout, and then Bayesian methods are used to fit a process model to these observed data, in order to estimate key "latent" parameters. Latent parameters of interest include how sea otters allocate their effort to foraging for different prey types, how much each of these prey types contributes to the resulting diet, several prey-specific parameters (mean size, handling time, consumption rates, and the functional relationship between the latter two parameters and prey size), and the overall net rate of biomass consumption and energy intake. The process model uses a probabilistic approach to account for incomplete data (including un-identified prey and missing data fields from some records), and the inherent biases associated with incomplete data (e.g. which types and sizes of prey are more likely to be recorded as un-identified). The resulting parameter estimates account for all sources of uncertainty, including sampling error, measurement error, uncertainty in the functional relationship between prey size and edible biomass, error in caloric density estimates, and various other sources of parameter uncertainty.  
-
-The results of the model fitting are presented below for the entire data set, and (if specified during model set-up) for each unique "level" of one or more categorical grouping variables. Grouping variables can include area, time period, otter ID, or reproductive status.  
+The analytic approach is collectively referred to as the "Sea Otter Foraging Analysis", or SOFA. Standard variables recorded in the field from foraging sea otters - duration of dive and surface intervals, prey captures, prey sizes, etc. - are first summarized for all the dives in each feeding bout, and then Bayesian methods are used to fit a process model to these observed data, in order to estimate key "latent" parameters. Latent parameters of interest include how sea otters allocate their effort to foraging for different prey types, how much each of these prey types contributes to the resulting diet, several prey-specific parameters (mean size, handling time, capture rates, and the functional relationship between the latter two parameters and prey size), and the overall net rate of biomass consumption and energy intake. The process model uses a probabilistic approach to account for incomplete data (including un-identified prey and missing data fields from some records), and the inherent biases associated with incomplete data (e.g. which types and sizes of prey are more likely to be recorded as un-identified). The resulting parameter estimates account for all sources of uncertainty, including sampling error, measurement error, uncertainty in the functional relationship between prey size and edible biomass, error in caloric density estimates, and various other sources of parameter uncertainty.  
 
 <div style="margin-bottom:50px;">
 </div>
@@ -79,19 +76,19 @@ $$T{{M}_{j,i}}~=\frac{1}{60}\left[ \sum{D{{T}_{j,i}}+}\sum{H{{T}_{j,i}}+}\left( 
 
 We note that one of the prey types for which we calculate total allocated minutes consists of un-identified prey items (UNID): we assume that these UNID prey items are a collection of all the other known prey types, but we do not know *a priori* the proportion of each known prey type comprising the UNID category (these values are to be estimated by the model, as explained below).
 
-For each observed bout we calculate the total number of minutes allocated to each prey type (*TM*~j,i~), and the mean value (averaged across dives) of four other statistics: the size of items of type j (*SZ.obs*~j,i~), the handling time per item of prey type j (*H.obs*~j,i~), the proportion of dives allocted to a prey type that are succesful (*PSD*~j~), and the per-item capture rate during dives allocated to prey type j (*cp.obs*~j,i~). For the latter statistic we exclude handling time at the surface, thus ensurring that the capture rate statistic is equivalent to the per-capita attack rate parameter in type-II funcitonal response models.
+For each observed bout we calculate the total number of minutes allocated to each prey type (*TM*~j,i~), and the mean value (averaged across dives) of four other statistics: the size of items of type j (*SZ.obs*~j,i~), the handling time per item of prey type j (*H.obs*~j,i~), the proportion of dives allocated to a prey type that are successful (*PSD*~j~), and the per-item capture rate during dives allocated to prey type j (*cp.obs*~j,i~). For the latter statistic we exclude handling time at the surface, thus ensuring that the capture rate statistic is equivalent to the *per-capita* attack rate parameter in type-II functional response models.
 
 ### Process model
 The observed activity of sea otter foraging can be approximated by a sequence of mathematical equations that together represent the process model, the expected dynamics of which are determined by the values of the parameters in the equations (Table 1). We let $\eta_j$ represent the mean proportional allocation of foraging effort to prey type *j*, excluding the UNID class (i.e. TRUE effort allocation if all prey were positively identified), such that:
 $$\sum_{j=1}^{J} \eta_j=1$$
   
-For each prey type *j* we also specify parameter $\omega_j$ as the probability that an item of that prey type will be positively identified. We calculate values of $\omega_j$ based on the empirical distributions of the log of handling time and the log of mean prey size of prey type *j*, and the degree to which these distributions overlap with the same distributions for the UNID prey class. We measure joint proportional overlap of multiple distributions using the Bhattacharyya coefficient (*BC*~j~), and we then calculate  $\omega_j$ as exp(-*BC*~j~). This approach is based on the assumption that the more similar the joint density distributions of size and handling time between UNID and prey type *j*, the more likely it is that *j* contributes to the UNID prey class. To account for unidentified prey in our observed data set, we define the parameter $\alpha$ as the relative allocation of effort to each prey type INCLUDING the UNID prey class. For positively identified prey types:
-$${{\alpha }_{j}}={{\eta }_{j}}\cdot {{\omega }_{j}}\cdot \tau_B $$
+For each prey type *j* we also specify parameter $\omega_j$ as the probability that an item of that prey type may not be positively identified. We calculate values of $\omega_j$ based on the empirical distributions of the log of handling time and the log of mean prey size of prey type *j*, and the degree to which these distributions overlap with the same distributions for the UNID prey class. We measure joint proportional overlap of multiple distributions using the Bhattacharyya distance metric (*BC*~j~), calculating $\omega_j$ as exp(-*BC*~j~). This approach reflects the assumption that the more similar the joint density distributions of size and handling time between UNID and prey type *j*, the more likely it is that *j* contributes to the UNID prey class. To account for unidentified prey in our observed data set, we define the parameter $\alpha$ as the relative allocation of effort to each prey type INCLUDING the UNID prey class. For positively identified prey types:
+$${{\alpha }_{j}}={{\eta }_{j}}\cdot {(1  - {\omega }_{j})}\cdot \tau_B $$
 while for the unidentified prey class (UNID):
-$${{\alpha }_{u}}=\sum\limits_{j}{{{\eta }_{j}}\cdot \left( 1-{{\omega }_{j}} \right)\cdot \tau_B }$$
+$${{\alpha }_{u}}=\sum\limits_{j}{{{\eta }_{j}}\cdot {{\omega }_{j}} \cdot \tau_B }$$
 
-The parameter $\tau_B$ represents a fitted precision parameter, which allows us to use $\alpha_j$ as the base parameters for a Dirichlet-Multinomial distribution that defines the relative probabilities of a prey type being observed in a given bout:
-$$\left[ {{\theta }_{j,i}} \right] \sim Dirichlet\left( {{\alpha }_{1}},{{\alpha }_{2}},\ ...\ {{\alpha }_{J}},{{\alpha }_{U}} \right)$$
+In the above equations, parameter $\tau_B$ represents a fitted precision parameter, allowing us to use $\alpha_j$ as the base parameters for a Dirichlet distribution that defines the relative probabilities of a prey type being observed in a given bout:
+$$\left[ {{\theta }_{j,i}} \right] \sim Dirichlet\left( {{\alpha }_{1}},{{\alpha }_{2}},\ ...\ {{\alpha }_{J}},{{\alpha }_{u}} \right)$$
 where $\theta_{j,i}$ is the expected proportional allocation of effort to each prey type for bout *i*.
 
 We define parameter $\mu_{s,j}$ as the mean log size (mm) for each prey type. For handling time and capture rate, we note that both of these parameters are correlated strongly with prey size: specifically, there is an approximately linear relationship between the log of each variable and the log of prey size.  We therefore calculate expected log handling time ($\mu_{h,j}$) and expected log capture rate ($\mu_{c,j}$) as derived parameters given the size of prey type j observed on a given bout:
@@ -113,20 +110,20 @@ where the per-item biomass of prey type *j* (*m*~j~) is calcuated from taxa-spec
 $$E{{R}_{j}}={}^{c{{p}_{j}}\cdot {{m}_{j}}\cdot Cden{{s}_{j}}}\!\!\diagup\!\!{}_{1+c{{p}_{j}}\cdot {{H}_{j}}}\;$$
 where *Cdens*~j~ is the caloric density (kcal/g) of items of prey type *j*, based on published data.
 
-In addition to prey-specific parameters, we also integrate consumption rate and energy intake rates across all prey types, accounting for proportional allocation of effort among prey types, to obtain the overall consumption rate (CR) and energy intake rate (ER). To achieve this we use a multi-species type-II funcitonal response:
-$$\overline{CR}={}^{\sum\limits_{j}{{{\eta }_{j}}\cdot c{{p}_{j}}\cdot {{m}_{j}}}}\!\!\diagup\!\!{}_{1+\sum\limits_{j}{{{\eta }_{j}}\cdot c{{p}_{j}}\cdot {{H}_{j}}}}\;$$
-$$\overline{ER}={}^{\sum\limits_{j}{{{\eta }_{j}}\cdot c{{p}_{j}}\cdot {{m}_{j}}\cdot Cden{{s}_{j}}}}\!\!\diagup\!\!{}_{1+\sum\limits_{j}{{{\eta }_{j}}\cdot c{{p}_{j}}\cdot {{H}_{j}}}}\;$$
+In addition to prey-specific parameters, we also integrate consumption rate and energy intake rates across all prey types, accounting for proportional allocation of effort among prey types, to obtain the overall consumption rate (CR) and energy intake rate (ER):
+$$\overline {CR}  = \sum\limits_j {{\eta _j} \cdot C{R_j}} $$
+$$\overline {ER}  = \sum\limits_j {{\eta _j} \cdot E{R_j}} $$
 where $\eta_j$ represents the mean proportional allocation of foraging effort to prey type *j*, as defined above.
 
 Diet composition, defined as the proportional contribution (in terms of consumed biomass) of each prey type to the overall diet ($/pi_j$), is calculated as: 
 $${{\pi }_{j}}={\left( {{\eta }_{j}}\cdot {{\overline{cr}}_{j}} \right)}/{\sum\limits_{j=1}^{J}{{{\eta }_{j}}\cdot {{\overline{cr}}_{j}}}}\;$$
 The proportional contribution of each prey type to the UNID prey class is represented by parameter $\upsilon_j$, calculated as:
-$${{\upsilon }_{j}}=\left( 1-{{\omega }_{j}} \right)\cdot {{\pi }_{j}}\cdot {}^{1}\!\!\diagup\!\!{}_{E{{B}_{j}}}\;$$
+$${{\upsilon }_{j}}={{\omega }_{j}} \cdot {{\pi }_{j}}\cdot {}^{1}\!\!\diagup\!\!{}_{E{{B}_{j}}}\;$$
 where *EB*~j~ is the average biomass per prey item of prey type *j*. 
 
 Finally, the process model can be modified to account for random effects of categorical group variables (age, sex, area, time period) by utilizing a hierarchical approach for certain key parameters.  We allow foraging effort to vary across groups using a Dirichlet-Multinomial approach:
 $${{\eta }_{g,j}}\sim Dirichlet\left( {{\eta }_{j}}\cdot {{\tau }_{G}} \right)$$
-where $\eta_{g,j}$ is the mean proportional allocation of foraging effort to prey type *j* in bouts belonging to group level *g*, and parameter $\tau_G$ is a fitted precision parameter that determines the degree of consistency in diet across groups. We assume that log prey size for each prey type is normally distributed across groups with mean equal to ${\bar{\mu}}_{s,j}$ and standard error as a fitted parameter.  We make the same assumption for $\phi_{1,j}$, $\psi_{1,j}$ and $\lambda_{j}$, thereby allowing prey specific handling times, capture rates and dive success rates to vary across groups.  By treating these base parameters hierarchically, we also allow for variation in the derived parameters of diet composition, mean consumption rates and mean energy intake rates across groups. Table 1 provides a summary of all parameters estimated by the model.
+where $\eta_{g,j}$ is the mean proportional allocation of foraging effort to prey type *j* in bouts belonging to group level *g*, and parameter $\tau_G$ is a fitted precision parameter that determines the degree of consistency in diet across groups. We assume that log prey size for each prey type is normally distributed across groups with mean equal to ${\bar{\mu}}_{s,j}$ and standard error as a fitted parameter. We make the same assumption for $\phi_{1,j}$, $\psi_{1,j}$ and $\lambda_{j}$, thereby allowing prey specific handling times, capture rates and dive success rates to vary across groups. By treating these base parameters hierarchically, we also allow for variation in the derived parameters of diet composition, mean consumption rates and mean energy intake rates across groups. Table 1 provides a summary of all parameters estimated by the model.
 
 ##### **Table 1. Summary of estimated parameters**
 |Parameter | Description |
@@ -167,7 +164,7 @@ where $\eta_{g,j}$ is the mean proportional allocation of foraging effort to pre
 | ${{\psi }_{1,g,j}}$ | H vs log(Size) function, intercept parameter, prey type j, group g |
 | ${{\eta }_{g,j}}$ | Proportion of foraging effort allocated to prey type j, group g |
 | ${{\pi }_{g,j}}$ | Proportion of diet (biomass consumed) made up of prey type j, group g |
-| ${{\omega }_{g,j}}$ | Proportion of prey type j identified, group g |
+| ${{\omega }_{g,j}}$ | Proportion of prey type j un-identified, group g |
 | ${{\upsilon }_{g,j}}$ | Contribution of prey type j to un-identified prey, group g |
 *Note: parameters with 'g' subscripts estimated if by-groups were incorporated in analysis*
 
