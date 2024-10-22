@@ -240,7 +240,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       }
       # Mean encounter rate CRmn by prey (and sample size) ** NOTE: also select on Tmtag==0
       if(p < NPtypes){
-      	ii = which(FD$SuccessV==1 & FD$PreyV==p & FD$Sz_mm>0 & FD$HTT>0 & (FD$HTT[ii] - FD$HT[ii]) > 30 & FD$Ncrct > 0.9 & FD$Tmtag ==0)
+      	ii = which(FD$SuccessV==1 & FD$PreyV==p & FD$Sz_mm>0 & FD$HTT>0 & (FD$HTT - FD$HT) > 30 & FD$Ncrct > 0.9 & FD$Tmtag ==0)
       	ECRmnP_n[b,p] = length(ii)
       	if(length(ii)>0){
       		ECRmnP[b,p] = mean(FD$Ncrct[ii] / ((FD$HTT[ii] - FD$HT[ii])/60 )) * CrctF_Un[b,p]
@@ -407,13 +407,17 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   #
   # *** NOTE: for prey with ni reliable capture rates, use lower quartile for all other prey  
   ii = which(is.infinite(ECRate) | ECRate < 0.01)
-  ECRate = ECRate[-ii]
-  Cp = Cp[-ii]
-  Csz = Csz[-ii]
-  Css = Css[-ii]
-  Cg = Cg[-ii]
+  if(length(ii)>0){
+    ECRate = ECRate[-ii]
+    Cp = Cp[-ii]
+    Csz = Csz[-ii]
+    Css = Css[-ii]
+    Cg = Cg[-ii]
+  }
   ii = which(is.na(ECRate))
-  ECRate[ii] = quantile(ECRate, prob = 0.25, na.rm = T)
+  if(length(ii)>0){
+    ECRate[ii] = quantile(ECRate, prob = 0.25, na.rm = T)
+  }
   # **** 
   #
   # Repeat for un-id prey

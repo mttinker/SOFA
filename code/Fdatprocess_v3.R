@@ -174,6 +174,16 @@ dat$PreyT = PreyT
 tmp = merge(cbind(dat$PreyT,seq(1,Nobs)),dfPtp[,c(2,1)],by=c(1,1),sort=F,all.x=T)
 tmp = tmp[order(as.numeric(tmp$V2)),]
 dat$PreyV = tmp$TypeN
+# Adjust prey size to account for minimum reasonable size
+if(ncol(dfPtp)==5){
+  for(i in 1:(NPtypes-1)){
+    if(!is.na(dfPtp[i,5]) & is.numeric(as.numeric(dfPtp[i,5])) & dfPtp[i,5]>0 ){
+      mnszmm = as.numeric(dfPtp[i,5])
+      ii = which(dat$PreyV==i & is.numeric(dat$Sz_mm) & dat$Sz_mm>0 )
+      dat$Sz_mm[ii] = pmax(dat$Sz_mm[ii],mnszmm)
+    }
+  }
+}
 # NOTE: allow for user over-ride adjustment of size for particular prey and group
 if(Adj_Sz_grp==1){
   n_sz_ch = nrow(dfSzAd)

@@ -42,7 +42,7 @@ Sys.sleep(.5)
 # 						 graphics = getOption("menu.graphics"))
 #
 MnN1 = as.numeric(dlg_input(message = "Min dives/bout for estimating prey attributes", 
-														default = 3)$res)
+														default = 5)$res)
 MnN2 = as.numeric(dlg_input(message = "Min dives/bout for estimating effort allocation", 
 														default = 10)$res)
 nsamples = as.numeric(dlg_input(message = "Number posterior samples from Bayesian fitting", 
@@ -296,7 +296,12 @@ suppressMessages(
 )
 #
 # if error, run: fit$output(1)
-fit_draws = fit$draws(params)
+
+if (!exists("select_chains")) {
+  fit_draws = fit$draws(params) 
+}else{
+  fit_draws = fit$draws(params) %>% subset_draws(chain=select_chains)
+}
 sumstats = fit_draws %>% 
 	summarise_draws(mean, mcse = mcse_mean, sd, 
 									~quantile(.x, probs = c(0.025, 0.05, .5, .95, .975), na.rm=T),
@@ -305,9 +310,9 @@ sumstats = as.data.frame(sumstats)
 row.names(sumstats) = sumstats$variable; sumstats = sumstats[,-1] 
 colnames(sumstats) = c("mean", "mcse", "sd","q2.5","q5","q50","q95","q97.5","N_eff", "rhat")
 #
-mcmc = as_draws_matrix(fit_draws,variables = parms)
+mcmc = as_draws_matrix(fit_draws,variables = params)
 Nsims = nrow(mcmc)
-mcmc_array = as_draws_array(fit_draws,variables = parms)
+mcmc_array = as_draws_array(fit_draws,variables = params)
 vn = colnames(mcmc); vns = row.names(sumstats)
 paramnames = params
 
@@ -339,28 +344,28 @@ fintxt = c("That completes model fitting, check psrf values and other diagnostic
 dlg_message(fintxt)
 
 # Diagnostic plots----------------------
-color_scheme_set("brewer-Set1")
-mcmc_trace(mcmc_array,pars=("ERmn")) + theme_classic()
-mcmc_trace(mcmc_array,pars=("ER[3]")) + theme_classic()
-mcmc_trace(mcmc_array,pars=("eta[3]")) + theme_classic()
-
-color_scheme_set("brightblue")
-mcmc_areas(mcmc, pars= ("ERmn"),
-					 area_method="equal height",
-					 prob = 0.8)
-
-mcmc_areas(mcmc, pars= vn[startsWith(vn,"Pi[")],
-					 area_method="equal height",
-					 prob = 0.8)
-
-mcmc_areas(mcmc, pars= vn[startsWith(vn,"eta[")],
-					 area_method="equal height",
-					 prob = 0.8)
-
-mcmc_areas(mcmc, pars= vn[startsWith(vn,"ER[")],
-					 area_method="equal height",
-					 prob = 0.8)
-
-mcmc_areas(mcmc, pars= vn[startsWith(vn,"Omega[")],
-					 area_method="equal height",
-					 prob = 0.8)
+# color_scheme_set("brewer-Set1")
+# mcmc_trace(mcmc_array,pars=("ERmn")) + theme_classic()
+# mcmc_trace(mcmc_array,pars=("ER[3]")) + theme_classic()
+# mcmc_trace(mcmc_array,pars=("eta[3]")) + theme_classic()
+# 
+# color_scheme_set("blue")
+# mcmc_areas(mcmc, pars= ("ERmn"),
+# 					 area_method="equal height",
+# 					 prob = 0.8)
+# 
+# mcmc_areas(mcmc, pars= vn[startsWith(vn,"Pi[")],
+# 					 area_method="equal height",
+# 					 prob = 0.8)
+# 
+# mcmc_areas(mcmc, pars= vn[startsWith(vn,"eta[")],
+# 					 area_method="equal height",
+# 					 prob = 0.8)
+# 
+# mcmc_areas(mcmc, pars= vn[startsWith(vn,"ER[")],
+# 					 area_method="equal height",
+# 					 prob = 0.8)
+# 
+# mcmc_areas(mcmc, pars= vn[startsWith(vn,"Omega[")],
+# 					 area_method="equal height",
+# 					 prob = 0.8)

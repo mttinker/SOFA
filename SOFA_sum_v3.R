@@ -48,7 +48,7 @@ file.copy(resultsfilename,
 					# "Results.rdata",overwrite = TRUE)
 					paste0("./code/","Results.rdata"),overwrite = TRUE)
 #
-
+color_scheme_set("blue")
 GrpFgHt = 10
 GL1 = 0; GL2 = 0; GL3 = 0; GL4 = 0; 
 if(Grp_TF){

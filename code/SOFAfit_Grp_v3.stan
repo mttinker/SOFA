@@ -171,8 +171,8 @@ model {
   kappa ~ beta(2,3);        // prob un-ID by bout, scaled by similarity to UN-ID in size & HT
   tauB ~ cauchy(0,0.5) ;    // precision param for diet comp variation across bouts
   tauG ~ cauchy(0,2.5) ;    // precision param for diet comp variation across groups
-  phi1 ~ normal(0,1.5) ;    // Intercept of log Cons Rate, by prey
-  phi2 ~ cauchy(0,.1) ;     // effect of size on log Cons rate
+  phi1 ~ normal(0,1.5) ;    // Intercept of log Encounter Rate, by prey
+  phi2 ~ cauchy(0,.1) ;     // effect of size on log Encounter rate
   psi1 ~ lognormal(0.5,0.6);// Intercept of log HT, by prey
   psi2 ~ cauchy(0,.1) ;     // effect of size on log HT rate
   psi1_u ~ lognormal(0.5,0.6); // Intercept of log HT, UN-ID prey

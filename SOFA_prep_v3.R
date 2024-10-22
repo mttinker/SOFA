@@ -178,7 +178,8 @@ writeData(wb, sheet = "Prey_code_key", x = prey_df, startCol = 1)
 # Prey_Types
 addWorksheet(wb, "Prey_Types")
 prey_types_df = data.frame("TypeN" = 0, "PreyType" = "UNID",
-													 "Description" = "UN-IDENTIFIED","Class"="")
+													 "Description" = "UN-IDENTIFIED", "Class" = "",
+													 "Min_size_mm" = "")
 writeData(wb, sheet = "Prey_Types", x = prey_types_df, startCol = 1)
 # Add drop-down validation for prey types"
 dataValidation(wb, "Prey_code_key", col = 5, rows = 2:500, type = "list", 
@@ -212,6 +213,8 @@ for(i in 1:nrow(Comments_df)){
 	}else if(i==9){
 		writeComment(wb, "Prey_Types", col = 4, row = 1, comment = Clst[[i]])
 	}else if(i==10){
+	  writeComment(wb, "Prey_Types", col = 5, row = 1, comment = Clst[[i]])
+	}else if(i==11){
 		writeComment(wb, "Prey_Library_Codes", col = 2, row = 1, comment = Clst[[i]])
 	}
 }
