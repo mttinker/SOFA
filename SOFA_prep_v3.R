@@ -1,10 +1,16 @@
 # SOFA (Sea Otter Forage Analysis), Version 3.0
 # Step 1, Preparation.
 # Source this script to prepare for an analysis of sea otter foraging data. 
-require(svDialogs)
-require(rstudioapi)
-require(readxl)
-require(openxlsx)
+#
+packages <- c("svDialogs", "rstudioapi", "readxl", "openxlsx")
+for(p in packages){
+  tryCatch(test <- require(p,character.only=T), 
+           warning=function(w) return())
+  if(!test) {
+    install.packages(p)
+    require(p)
+  }
+}
 # Generic function for stopping script in case of error:
 stop_quietly <- function() {
 	opt <- options(show.error.messages = FALSE)

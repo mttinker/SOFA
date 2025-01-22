@@ -2,18 +2,16 @@
 # Step 2, Model fitting.
 # Source this script to fit the SOFA model to sea otter foraging data. 
 #
-require(svDialogs)
-require(rstudioapi)
-require(readxl)
-require(openxlsx)
-require(tcltk)
-require(parallel)
-#require(rstan)
-library(cmdstanr)
-library(posterior)
-library(gtools)
-library(ggplot2)
-library(bayesplot)
+packages <- c("svDialogs", "rstudioapi", "readxl", "openxlsx","tcltk", "parallel", "cmdstanr", "posterior",
+              "gtools", "ggplot2", "bayesplot")
+for(p in packages){
+  tryCatch(test <- require(p,character.only=T), 
+           warning=function(w) return())
+  if(!test) {
+    install.packages(p)
+    require(p)
+  }
+}
 rstan::rstan_options(javascript=FALSE)
 #
 # Create Generic function for stopping script in case of error:

@@ -1,21 +1,19 @@
 # SOFA (Sea Otter Forage Analysis), Version 3.0
 # Step 3, Model Summary.
 # Source this script to generate an html markdown report of results. 
-require(svDialogs)
-require(rstudioapi)
-require(readxl)
-require(openxlsx)
-require(tcltk)
-require(parallel)
-require(rstan)
-require(ggplot2)
-require(gridExtra)
-require(bayesplot)
-require(rmarkdown)
-require(gtools)
-require(dplyr)
-require(knitr)
-require(kableExtra)
+#
+packages <- c("svDialogs", "rstudioapi", "readxl", "openxlsx","tcltk", "parallel", "rstan", 
+              "ggplot2", "gridExtra", "bayesplot", "rmarkdown", "gtools", "dplyr",
+              "knitr", "kableExtra", "clipr")
+for(p in packages){
+  tryCatch(test <- require(p,character.only=T), 
+           warning=function(w) return())
+  if(!test) {
+    install.packages(p)
+    require(p)
+  }
+}
+#
 rm(list = ls())
 # Create Generic function for stopping script in case of error:
 stop_quietly <- function() {
@@ -25,7 +23,7 @@ stop_quietly <- function() {
 }
 rspnse = dlg_message(c("This script is used to generate an html report that summarizes results of  ",
 											 "the analysis of sea otter foraging data using SOFA (Sea Otter Foraging Analysis). ",
-											 "You begin by selecting a Project name and results file. ",
+											 "You begin by selecting a Project name and then the results file. ",
 											 "Continue?"), "okcancel")$res
 if(rspnse == "cancel"){
 	stop_quietly()
@@ -38,12 +36,19 @@ Sys.sleep(.5)
 rslt_list = dir(paste0(Projectpath,"/results"))
 rdata_file = tk_select.list(rslt_list, preselect = NULL, multiple = FALSE,
 										title = "Select results file" ) 
+rdata_file_noextns = substr(rdata_file, 1, nchar(rdata_file)-6) 
+#
 if(length(rdata_file)==0){
 	dlg_message(c("No data file selected"), "ok")
 	stop_quietly()
 }
 resultsfilename = paste0("./projects/",Projectname,"/results/",rdata_file)
 if(length(grep("Grp", rdata_file))>0){Grp_TF=TRUE}else{Grp_TF=FALSE}
+# Remove temporary "Results.rdata" file first (in case overwrite doesn't work)
+if (file.exists(paste0("./code/","Results.rdata"))) {
+  #Delete file if it exists
+  file.remove(paste0("./code/","Results.rdata"))
+}
 file.copy(resultsfilename,
 					# "Results.rdata",overwrite = TRUE)
 					paste0("./code/","Results.rdata"),overwrite = TRUE)
@@ -105,12 +110,16 @@ if(rspnse == "cancel"){
 vers = read.csv("./code/Version.csv"); vers = vers$Version
 title = paste0("~~~ Sea otter foraging analysis (SOFA) ",vers," ~~~ ")
 subtitle = paste0("Project: ", Projectname, ", Results file: ",rdata_file)
-output_dirname =  paste0("./projects/",Projectname)
-output_filename = "SOFA_summary.pdf"
+output_dirname =  paste0("./projects/",Projectname,"/results")
+output_filename = paste0("SOFA_sum_",rdata_file_noextns,".pdf") 
 rmd_pathname = "./code/SOFA_summary_v3.Rmd"
 tmpdir <- tempdir()
 Daterun = Sys.Date()
-
+if (file.exists(file.path(tmpdir,output_filename))) {
+  #Delete file if it exists
+  file.remove(file.path(tmpdir,output_filename))
+}
+#
 render(rmd_pathname,
 			 output_dir = tmpdir, # NOTE: need to compile to tmpdir to avoid pathname with spaces (#*^# Microsoft!)
 			 output_file = output_filename,
@@ -118,9 +127,19 @@ render(rmd_pathname,
 			 							rep_date = Daterun, show.grptxt = Grp_TF,
 			 							GL1 = GL1, GL2 = GL2, GL3 = GL3, GL4 = GL4, 
 			 							GrpFgHt = GrpFgHt)) # 
+#
+# Remove existing summary pdf first (in case overwrite doesn't work)
+if (file.exists(file.path(output_dirname,output_filename))) {
+  #Delete file if it exists
+  file.remove(file.path(output_dirname,output_filename))
+}
 
 file.copy(file.path(tmpdir,output_filename),output_dirname, overwrite = T)
 
 on.exit(unlink(tmpdir))
 
-dlg_message(c("The results can be viewed by opening 'SOFA_summary' in the projecy folder"), "ok")
+clipr::write_clip(sumstats)
+
+dlg_message(paste("Results can be viewed in the approproate 'SOFA_sum' pdf in results sub-folder of project folder.",
+                  "Your clipboard also has a table of summary stats that can be pasted into an empty spredsheet"), "ok")
+
