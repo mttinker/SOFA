@@ -196,7 +196,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     TimeAllocP = colSums(STpr) + colSums(DTpr) 
     TimeAllocUnP = colSums(STpr*NDvUnP) + colSums(DTpr*NDvUnP) 
     ppn_alloc_raw = TimeAllocP/sum(TimeAllocP)
-    ppn_alloc_adj = ppn_alloc_raw * (SzMean/max(SzMean))^2
+    ppn_alloc_adj = ppn_alloc_raw * (SzMean/max(SzMean))^3
     AlloctP[b,] = ppn_alloc_adj/sum(ppn_alloc_adj)
     TimeUnsP = (sum(STun) + sum(DTun)) * AlloctP[b,]
     # Need to correct CR for allocted and unallocated unsuccesful dives: 

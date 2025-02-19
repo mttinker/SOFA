@@ -231,7 +231,7 @@ if(!is.list(stan.data)){
 # options(mc.cores = parallel::detectCores())
 # rstan_options(auto_write = TRUE)
 cores = detectCores()
-ncore = max(3,min(20,cores-3))
+ncore = max(3,min(20,cores-2))
 Niter = round(nsamples/ncore)
 #
 if(Niter>250){
@@ -242,16 +242,16 @@ if(Niter>250){
 #
 if(GrpOpt==0){
 	params <- c("tauB","CRmn","ERmn","LMmn","kappa","SZ","SZ_u",
-							"HT","HT_u","CR","ER","eta","Pi","upsilon","Omega",
-							"phi1","phi2","psi1","psi2","LM","theta",
+							"HT","HT_u","CP","CR","ER","eta","Pi","upsilon",
+							"Omega","phi1","phi2","psi1","psi2","LM","theta",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u","sigLM") 
 							# "muSZ","muSZ_u","psi1_u","psi2_u",
 }else{
 	params <- c("tauB","tauG","CRmn","ERmn","LMmn","kappa","SZ",
-							"SZ_u","HT","HT_u","CR","ER","eta","Pi","upsilon",
+							"SZ_u","HT","HT_u","CP","CR","ER","eta","Pi","upsilon",
 							"Omega","phi1","phi2","psi1","psi2","LM","theta",
 							"sigCR","sigSZ","sigSZ_u","sigHT","sigHT_u","sigLM",
-						 	"CRgmn","ERgmn","LMgmn","SZg","SZg_u","HTg","CRg","ERg",
+						 	"CRgmn","ERgmn","LMgmn","SZg","SZg_u","HTg","CPg","CRg","ERg",
 					  	"LMg","etaG","PiG","upsilonG","OmegaG","phi1G","psi1G",
 							"sg1","sg2","sg3","sg4","sg5","sg6") 
 							# "muSZ","muSZ_u","muSZG","muSZG_u","psi1_u","psi2_u","psi1G_u",
@@ -336,7 +336,7 @@ if (GrpOpt==0){
 											format(Sys.time(), "%Y_%b_%d_%H"),"hr.rdata"))
 	}
 }
-fintxt = c("That completes model fitting, check psrf values and other diagnostics. ",
+fintxt = c("That completes model fitting, check r-hat values and other diagnostics. ",
 					 "The results have been saved to the 'results' sub-folder of the project. ",
 					 "You can view summary plots and tables by running the 'SOFA_sum' script. ")
 dlg_message(fintxt)
