@@ -184,24 +184,21 @@ if(ncol(dfPtp)==5){
     }
   }
 }
-# Allow for user over-ride adjustment of size for particular prey 
+# Allow for user over-ride adjustment of size for particular prey (potentially by group)
 if(Adj_Sz_grp==1){
   n_sz_ch = nrow(dfSzAd)
   for(i in 1:n_sz_ch){
-    ii = which(dat$PreyT==dfSzAd$PreyType[i])
-    if(length(ii)>0){
-      dat$Sz_mm[ii] = dfSzAd$Adjust_fact[i] * dat$Sz_mm[ii]
-    }
-  }
-}
-# Allow for user over-ride adjustment of size for particular prey and group
-if(Adj_Sz_grp==2){
-  n_sz_ch = nrow(dfSzAd)
-  for(i in 1:n_sz_ch){
-    iicol = which(colnames(dat)==dfSzAd$Groupvar[i])
-    ii = which(dat[,iicol]==as.character(dfSzAd$Value[i]) & dat$PreyT==dfSzAd$PreyType[i])
-    if(length(ii)>0){
-      dat$Sz_mm[ii] = dfSzAd$Adjust_fact[i] * dat$Sz_mm[ii]
+    if(is.na(dfSzAd$Groupvar[i])){
+      ii = which(dat$PreyT==dfSzAd$PreyType[i])
+      if(length(ii)>0){
+        dat$Sz_mm[ii] = dfSzAd$Adjust_fact[i] * dat$Sz_mm[ii]
+      }
+    }else{
+      iicol = which(colnames(dat)==dfSzAd$Groupvar[i])
+      ii = which(dat[,iicol]==as.character(dfSzAd$Value[i]) & dat$PreyT==dfSzAd$PreyType[i])
+      if(length(ii)>0){
+        dat$Sz_mm[ii] = dfSzAd$Adjust_fact[i] * dat$Sz_mm[ii]
+      }
     }
   }
 }

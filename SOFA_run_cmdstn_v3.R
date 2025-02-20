@@ -64,13 +64,16 @@ if(length(!is.na(dfPr$PreyType))<length(!is.na(dfPr$PreyCode))){
 								"please go back and edit. Stopping program."))
 	stop_quietly()
 }
-# Check if file exists to adjust size of specific prey (and potentially for specific group variable levels)
+# Option to adjust size of specific prey (and potentially for specific group variable levels)
 if(file.exists(paste0("./projects/",Projectname,"/Adjust_size_prey.xlsx"))){
-  Adj_Sz_grp = 1
   dfSzAd = read_excel(paste0("./projects/",Projectname,"/Adjust_size_prey.xlsx"))	
-}else if(file.exists(paste0("./projects/",Projectname,"/Adjust_size_group.xlsx"))){
-	Adj_Sz_grp = 2
-	dfSzAd = read_excel(paste0("./projects/",Projectname,"/Adjust_size_group.xlsx"))
+  n_sz_ch = nrow(dfSzAd)
+  if(n_sz_ch>0){
+    Adj_Sz_grp = 1
+  }else{
+    Adj_Sz_grp = 0
+    dfSzAd = numeric()
+  }
 }else{
 	Adj_Sz_grp = 0
 	dfSzAd = numeric()

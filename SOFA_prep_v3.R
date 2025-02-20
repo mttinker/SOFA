@@ -106,7 +106,7 @@ dat = dat[order(dat$Bout,dat$Subbout,dat$Divenum,dat$Success,dat$Prey,dat$Size),
 # Write data file to specified project directory:
 write.xlsx(dat,file=paste0("./projects/",Projectname,"/Forage_dat.xlsx"))
 # Copy other helper files to directory, 
-files = c("Sizeclass_key.xlsx","Pawsz.xlsx")
+files = c("Sizeclass_key.xlsx","Pawsz.xlsx","Adjust_size_prey.xlsx")
 file.copy(file.path(paste0("./helperfiles"),files),
 					paste0("./projects/",Projectname),overwrite = TRUE)
 # Create Mass_lng_dat and Energy_dat and Prey_Spcs spreadsheets
