@@ -270,7 +270,7 @@ if (GrpOpt==0){
 	fitmodel = "SOFAfit_Grp_v3.stan"
 }
 #
-modfile <- file.path("./code", fitmodel)
+  modfile <- file.path("./code", fitmodel)
 mod <- cmdstan_model(modfile)
 #
 rspnse = dlg_message(c("That completes set-up, the model will now be fit using ",

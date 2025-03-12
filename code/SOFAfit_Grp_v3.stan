@@ -265,7 +265,7 @@ generated quantities {
         CRg[g][j] = CRg[g][j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) ;  
         ERg[g][j] = ERg[g][j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) * Cal_dens[j] ;
         HTg[g][j] = HTg[g][j] + fmin(600, h[j]*60) ;
-        CPg[g][j] = CPg[j][j] + a[j] ;
+        CPg[g][j] = CPg[g][j] + a[j] ;
       }
     }
   }
