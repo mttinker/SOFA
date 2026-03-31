@@ -243,27 +243,34 @@ generated quantities {
     vector[Km1] h ;
     vector[Km1] Cal_dens ;
     vector[Km1] Csz_r ;
-    real CR_mx = normal_rng(CR_max, .15 * CR_max) ;
-    for (j in 1:Km1){      
+    // real CR_mx = normal_rng(CR_max, .15 * CR_max) ;
+    for (j in 1:Km1){     
+      real log_m ;     
       Cal_dens[j] = fmax(.15,fmin(2.25,lognormal_rng(Cal_dns_mn[j],Cal_dns_sg[j]))) ;
       s[j] = lognormal_rng(muSZ[j],sigSZ[j]) ;
-      m[j] = exp(MLpar1[j] + MLpar2[j] * log(s[j]) + normal_rng(0,logMass_sg[j])) ;
       Csz_r[j] = 2.5 * log(s[j]) - 7 ;      
       a[j] = lognormal_rng((phi1[j] - phi2[j] * Csz_r[j]), sigCR[j]) ;
       h[j] = lognormal_rng((psi1[j] + psi2[j] * Csz_r[j]), sigHT[j]) / 60 ;
+      log_m = fmin(log(CR_max * h[j]), MLpar1[j] + MLpar2[j] * log(s[j]) ) ;
+      m[j] = exp(log_m + normal_rng(0,logMass_sg[j])) ;
       // Prey-specific consumption & energy intake rates: type-II functional response (Hollings disc eqn)
-      CR[j] = CR[j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) ;  
-      ER[j] = ER[j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) * Cal_dens[j]  ;
+      // CR[j] = CR[j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) ;  
+      // ER[j] = ER[j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) * Cal_dens[j]  ;
+      CR[j] = CR[j] + (a[j] * m[j]) / (1 + h[j] * a[j])  ;  
+      ER[j] = ER[j] + ((a[j] * m[j]) / (1 + h[j] * a[j])) * Cal_dens[j] ;            
       HT[j] = HT[j] + fmin(600, h[j]*60) ;
       CP[j] = CP[j] + a[j] ;
     }
     for(g in 1:Ngrp){
       for (j in 1:Km1){
+        real log_m ;    
         a[j] = lognormal_rng((phi1G[g][j] - phi2[j] * Csz_r[j]), sigCR[j]) ;
         h[j] = lognormal_rng((psi1G[g][j] + psi2[j] * Csz_r[j]), sigHT[j]) / 60 ;
+        log_m = fmin(log(CR_max * h[j]), MLpar1[j] + MLpar2[j] * log(s[j]) ) ;
+        m[j] = exp(log_m + normal_rng(0,logMass_sg[j])) ; 
         // Prey-specific consumption & energy intake rates: type-II functional response (Hollings disc eqn)
-        CRg[g][j] = CRg[g][j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) ;  
-        ERg[g][j] = ERg[g][j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) * Cal_dens[j] ;
+        CRg[g][j] = CRg[g][j] + (a[j] * m[j]) / (1 + h[j] * a[j]) ;  
+        ERg[g][j] = ERg[g][j] + ((a[j] * m[j]) / (1 + h[j] * a[j]) ) * Cal_dens[j] ;
         HTg[g][j] = HTg[g][j] + fmin(600, h[j]*60) ;
         CPg[g][j] = CPg[g][j] + a[j] ;
       }

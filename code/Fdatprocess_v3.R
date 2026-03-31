@@ -137,7 +137,8 @@ Paw = Paw[order(as.numeric(Paw$ord)),];
 dat$Paw_wd = Paw$Pawidth; dat$Pawratio = Pawratio; rm(Paw,Pawratio)
 dat$Sz_mm = dat$Paw_wd*dat$Pawratio
 # Override Sz_mm for prey caps where "est_cm" was recorded 
-ii = which(!is.na(dat$est_cm) & dat$est_cm>0)
+#  but not including impossible/erroneous estimates
+ii = which(!is.na(dat$est_cm) & dat$est_cm>0 & dat$est_cm <= 75 & dat$Size == 4 )
 if(length(ii)>0){
   dat$Sz_mm[ii] = 10*dat$est_cm[ii]
 }  

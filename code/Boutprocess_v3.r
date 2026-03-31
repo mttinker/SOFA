@@ -5,7 +5,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   require(gtools)
 	# Average max prey consumption rate (g/min of feeding time) based on empirical observations
   #  *NOTE: includes dive times as well as surface times
-	CR_max = 35
+	# CR_max = 35
 	# Min size (mm) for which a previous series of uncsuccesful dives associated with prey capture
 	Sz_Lgry = 75
 	Ratio_ST = sum(Fdat$ST,na.rm=T) / (sum(Fdat$ST,na.rm=T) + sum(Fdat$DT,na.rm=T))
@@ -30,9 +30,18 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   # We assume unsuccessful dives are allocated to prey types in ppn to freq with which
   # each prey observed in bout, adjusted for prey size (larger prey >> unsuccesful dives)
   SzMean = numeric()
+  MnMass = numeric()
   for (p in 1:NPtypes){
    ii = which(Fdat$SuccessV==1 & Fdat$PreyV==p & Fdat$Sz_mm>0 )
    SzMean[p] = mean(Fdat$Sz_mm[ii],na.rm = T)  
+   if(p < NPtypes){
+     iii = which(Fdat$PreyV==p & !is.na(Fdat$Mass_est) )
+     if(length(iii) == 0){
+       MnMass[p] = 5
+     }else{
+       MnMass[p] = median(Fdat$Mass_est[iii],na.rm=T)
+     }
+   }
   }
   for (b in 1:Nbouts){
     ii = which(Fdat$BoutN==b) 
@@ -195,9 +204,9 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
                     sum(FD$DT[which(is.na(FD$Preynum) | FD$Preynum == 1)]))/60
     TimeAllocP = colSums(STpr) + colSums(DTpr) 
     TimeAllocUnP = colSums(STpr*NDvUnP) + colSums(DTpr*NDvUnP) 
-    ppn_alloc_raw = TimeAllocP/sum(TimeAllocP)
-    ppn_alloc_adj = ppn_alloc_raw * (SzMean/max(SzMean))^3
-    AlloctP[b,] = ppn_alloc_adj/sum(ppn_alloc_adj)
+    # Adjust proporitonal allocation for prey biomass
+    lgz = log(TimeAllocP/sum(TimeAllocP))
+    AlloctP[b,] = exp(lgz + log(MnMass)) / sum(exp(lgz + log(MnMass)))
     TimeUnsP = (sum(STun) + sum(DTun)) * AlloctP[b,]
     # Need to correct CR for allocted and unallocated unsuccesful dives: 
     CrctF_Un[b,] = (TimeAllocP - TimeAllocUnP) / (TimeAllocP + TimeUnsP) 
@@ -268,7 +277,6 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
   HTmn = numeric(); Hp = numeric(); Hsz = numeric(); Hss = numeric(); Hg = numeric()
   LMlg = numeric(); Lp = numeric(); Lss = numeric(); Lg = numeric()
   ECRate = numeric(); Cp = numeric(); Csz = numeric(); Css = numeric(); Cg = numeric()
-  MnMass = numeric()
   MLpar1 = numeric()
   MLpar2 = numeric()
   # Replace rho by array of correlation matrices
@@ -294,13 +302,6 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     # Correlation between prey size and HT
     ii = which(!is.na(SmnP[,p]) & !is.na(HTmnP[,p]) )
     rho_HS[p,,] = c(1, rep(max(0.05,cor(log(SmnP[ii,p]),log(HTmnP[ii,p]))),2),1)
-    #
-    ii = which(Fdat$PreyV==p & !is.na(Fdat$Mass_est) )
-    if(length(ii) == 0){
-      MnMass[p] = 10
-    }else{
-      MnMass[p] = mean(Fdat$Mass_est[ii],na.rm=T)
-    }
     #
     ii = which(SmnP_n[,p] >= MnN1)
     if(length(ii)<6){ii = which(SmnP_n[,p] > 0)}

@@ -465,13 +465,13 @@ kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs
 
 ```{r Table6, echo=FALSE}
 
-ii = c(which(startsWith(vns,"CR[")))
+ii = c(which(startsWith(vns,"CP[")))
 
-paramstats = data.frame(Parameter = c(paste0("cr_",seq(1,(NPtypes-1))) ))
+paramstats = data.frame(Parameter = c(paste0("cp_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 
 kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
-      caption = "Parameter estimates for mean consumption rate by prey type ${{\\bar{cr}}_{j}}$ (g/min), for the overall data set") %>%
+      caption = "Parameter estimates for mean capture rate by prey type ${{\\bar{cp}}_{j}}$ (items/min), for the overall data set") %>%
   kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
@@ -512,7 +512,7 @@ paramstats = data.frame(Parameter = c(paste0("phi_1_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 
 kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
-      caption = "Estimates for $\\phi_{1,j}$, the intercept parameter for the function relating log consumption rate to log size, by prey type, for the overall data set") %>%
+      caption = "Estimates for $\\phi_{1,j}$, the intercept parameter for the function relating log capture rate to log size, by prey type, for the overall data set") %>%
   kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
@@ -525,7 +525,7 @@ paramstats = data.frame(Parameter = c(paste0("phi_2_",seq(1,(NPtypes-1))) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 
 kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
-      caption = "Estimates for $\\phi_{2,j}$, the slope parameter for the function relating log consumption rate to log size, by prey type, for the overall data set") %>%
+      caption = "Estimates for $\\phi_{2,j}$, the slope parameter for the function relating log capture rate to log size, by prey type, for the overall data set") %>%
   kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
@@ -696,15 +696,15 @@ kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs
 ii = numeric()
 for(i in 1:Ngrp){
 	for(j in 1:(NPtypes-1)){
-		ii = c(ii,which(vns==paste0("CRg[",i,",",j,"]")))
+		ii = c(ii,which(vns==paste0("CPg[",i,",",j,"]")))
 	}
 }
 
-paramstats = data.frame(Parameter = c(paste0("cr_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
+paramstats = data.frame(Parameter = c(paste0("cp_", rep(seq(1,Ngrp),each=(NPtypes-1)), ",", rep(seq(1,(NPtypes-1)),Ngrp)) ))
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 
 kable(paramstats, row.names = FALSE, format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
-      caption = "Parameter estimates for mean consumption rate, ${{\\bar{cr}}_{g,j}}$, by group level g and by prey type j") %>%
+      caption = "Parameter estimates for mean capture rate, ${{\\bar{cp}}_{g,j}}$, by group level g and by prey type j") %>%
   kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```
@@ -760,7 +760,7 @@ paramstats = data.frame(Parameter = c(paste0("phi_1_", rep(seq(1,Ngrp),each=(NPt
 paramstats = cbind(paramstats,sumstats[ii,c(1,3,4,8,9,10)])
 
 kable(paramstats, row.names = FALSE,format = "latex", centering = FALSE,booktabs = TRUE,longtable = TRUE,
-      caption = "Estimates for $\\phi_{1,g,j}$, intercept parameter for function relating log consumption rate to log size, for each group g and prey type j") %>%
+      caption = "Estimates for $\\phi_{1,g,j}$, intercept parameter for function relating log capture rate to log size, for each group g and prey type j") %>%
   kable_styling(latex_options = "repeat_header", repeat_header_text = "(continued)", repeat_header_method = "replace")
 
 ```

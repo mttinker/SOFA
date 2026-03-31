@@ -39,6 +39,8 @@ Sys.sleep(.5)
 # 						 title = "Select Project name",
 # 						 graphics = getOption("menu.graphics"))
 #
+CR_max = as.numeric(dlg_input(message = "Max ratio mean edible biomass (g) to HT (min)", 
+                              default = 250)$res)
 MnN1 = as.numeric(dlg_input(message = "Min dives/bout for estimating prey attributes", 
 														default = 5)$res)
 MnN2 = as.numeric(dlg_input(message = "Min dives/bout for estimating effort allocation", 
@@ -286,7 +288,7 @@ suppressMessages(
 	suppressWarnings ( 
 		fit <- mod$sample(
 			data = stan.data,
-			seed = 123,
+			seed = 321,
 			chains = ncore,
 			parallel_chains = ncore,
 			refresh = 200,
