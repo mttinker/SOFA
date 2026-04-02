@@ -166,7 +166,8 @@ generated quantities {
     vector[Km1] Cal_dens ;
     // real CR_mx = normal_rng(CR_max, .15 * CR_max) ;
     for (j in 1:Km1){
-      real log_m ;        
+      real log_m ;    
+      real Csz_r ;
       Cal_dens[j] = fmax(.15,fmin(2.25,lognormal_rng(Cal_dns_mn[j],Cal_dns_sg[j]))) ;
       s[j] = lognormal_rng(muSZ[j],sigSZ[j]) ;      
       Csz_r = 2.5 * log(s[j]) - 7 ;      
