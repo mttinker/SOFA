@@ -40,7 +40,7 @@ Sys.sleep(.5)
 # 						 graphics = getOption("menu.graphics"))
 #
 CR_max = as.numeric(dlg_input(message = "Max ratio mean edible biomass (g) to HT (min)", 
-                              default = 250)$res)
+                              default = 80)$res)
 MnN1 = as.numeric(dlg_input(message = "Min dives/bout for estimating prey attributes", 
 														default = 5)$res)
 MnN2 = as.numeric(dlg_input(message = "Min dives/bout for estimating effort allocation", 
