@@ -33,16 +33,28 @@ Prjct_name = basename(Prjct_path)
 Sys.sleep(.5)
 base_dir = getwd()
 setwd(paste0(Prjct_path,"/results"))
-tmp = choose.files(filters = Filters[c("RData"),],multi = FALSE,caption= "Select results file")
+Sys.sleep(.5)
+tmp = dlg_open(
+  default =  paste0(getwd(), "/*.rdata"),
+  multiple = FALSE,
+  title =  "Select results file",
+  filters = Filters[c("RData"),],
+  gui = .GUI
+)
+#tmp = choose.files(default = paste0(getwd(), "/*.rdata"),
+#                   filters = Filters[c("RData"),],multi = FALSE,caption= "Select results file")
 setwd(base_dir)
-rdata_file = basename(tmp)
+#rdata_file = basename(tmp)
+rdata_file = basename(tmp$res)
 rdata_file_noextns = substr(rdata_file, 1, nchar(rdata_file)-6) 
 #
 if(length(rdata_file)==0){
 	dlg_message(c("No data file selected"), "ok")
 	stop_quietly()
 }
+
 resultsfilename = paste0("./projects/",Prjct_name,"/results/",rdata_file)
+
 if(length(grep("Grp", rdata_file))>0){Grp_TF=TRUE}else{Grp_TF=FALSE}
 # Remove temporary "Results.rdata" file first (in case overwrite doesn't work)
 if (file.exists(paste0("./code/","Results.rdata"))) {
