@@ -227,7 +227,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       SmnP_n[b,p] = length(ii)
       if(length(ii)>0){
         SmnP[b,p] = mean(FD$Sz_mm[ii])
-        GmnP[b,p] = mean(FD$Mass_est[ii])
+        # GmnP[b,p] = mean(FD$Mass_est[ii])
       }
       # Mean edible biomass by prey 
       ii = which(FD$SuccessV==1 & FD$PreyV==p & FD$Sz_mm>0 & FD$Mass_est > 0)
@@ -297,8 +297,8 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     # 
     MLpar1[p] = coef(ft)[1]
     MLpar2[p] = coef(ft)[2]
-    # Add variance of size-mass fxn reflecting multiple species in prey type
-    logMass_sg[p] = sqrt(logMass_sg[p]^2 + (predict(ft,se.fit = T)$residual.scale)^2)
+    # Add variance reflecting multiple species in prey type (but limit to V = 0.05)
+    logMass_sg[p] = sqrt(logMass_sg[p]^2 + min(0.05, (predict(ft,se.fit = T)$residual.scale)^2) )
     # Correlation between prey size and HT
     ii = which(!is.na(SmnP[,p]) & !is.na(HTmnP[,p]) )
     rho_HS[p,,] = c(1, rep(max(0.05,cor(log(SmnP[ii,p]),log(HTmnP[ii,p]))),2),1)

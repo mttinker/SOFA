@@ -302,11 +302,18 @@ suppressMessages(
 )
 #
 # if error, run: fit$output(1)
-
-if (!exists("select_chains")) {
-  fit_draws = fit$draws(params) 
-}else{
+fit_draws = fit$draws(params) 
+mcmc_array = as_draws_array(fit_draws,variables = params)
+vn = dimnames(mcmc_array)$variable
+# See if any chains got stuck (flatlined)... LMmn is useful for testing this
+tmp = mcmc_array[,,which(vn=="LMmn")]
+chainvar = apply(tmp[,,1],2,"sd")
+flatchain = which(chainvar < .005)
+# If <33% of chains flatlined (at least 2 did not) then remove
+if(length(flatchain)>0 & length(flatchain) <= round(.333*ncore) ){
+  select_chains = which(chainvar > .005)
   fit_draws = fit$draws(params) %>% subset_draws(chain=select_chains)
+  mcmc_array = as_draws_array(fit_draws,variables = params)
 }
 sumstats = fit_draws %>% 
 	summarise_draws(mean, mcse = mcse_mean, sd, 
@@ -318,7 +325,6 @@ colnames(sumstats) = c("mean", "mcse", "sd","q2.5","q5","q50","q95","q97.5","N_e
 #
 mcmc = as_draws_matrix(fit_draws,variables = params)
 Nsims = nrow(mcmc)
-mcmc_array = as_draws_array(fit_draws,variables = params)
 vn = colnames(mcmc); vns = row.names(sumstats)
 paramnames = params
 
@@ -352,8 +358,9 @@ dlg_message(fintxt)
 # Diagnostic plots----------------------
 # color_scheme_set("brewer-Set1")
 # mcmc_trace(mcmc_array,pars=("ERmn")) + theme_classic()
-# mcmc_trace(mcmc_array,pars=("ER[3]")) + theme_classic()
-# mcmc_trace(mcmc_array,pars=("eta[3]")) + theme_classic()
+# mcmc_trace(mcmc_array,pars=("LMmn")) + theme_classic()
+# mcmc_trace(mcmc_array,pars=("ER[7]")) + theme_classic()
+# mcmc_trace(mcmc_array,pars=("eta[7]")) + theme_classic()
 # 
 # color_scheme_set("blue")
 # mcmc_areas(mcmc, pars= ("ERmn"),
