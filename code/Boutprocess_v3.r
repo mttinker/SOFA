@@ -298,7 +298,7 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     MLpar1[p] = coef(ft)[1]
     MLpar2[p] = coef(ft)[2]
     # Add variance reflecting multiple species in prey type (but limit to V = 0.05)
-    logMass_sg[p] = sqrt(logMass_sg[p]^2 + min(0.05, (predict(ft,se.fit = T)$residual.scale)^2) )
+    logMass_sg[p] = sqrt(logMass_sg[p]^2 + min(0.1, (predict(ft,se.fit = T)$residual.scale)^2) )
     # Correlation between prey size and HT
     ii = which(!is.na(SmnP[,p]) & !is.na(HTmnP[,p]) )
     rho_HS[p,,] = c(1, rep(max(0.05,cor(log(SmnP[ii,p]),log(HTmnP[ii,p]))),2),1)

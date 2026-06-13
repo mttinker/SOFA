@@ -174,7 +174,7 @@ generated quantities {
       a[j] = lognormal_rng((phi1[j] - phi2[j] * Csz_r), sigCR[j]) ;
       h[j] = lognormal_rng((psi1[j] + psi2[j] * Csz_r), sigHT[j]) / 60 ;
       log_m = fmin(log(CR_max * h[j]), MLpar1[j] + MLpar2[j] * log(s[j]) ) ;
-      m[j] = exp(log_m + normal_rng(0,logMass_sg[j])) ;
+      m[j] = exp(log_m + normal_rng(0,logMass_sg[j]) - square(logMass_sg[j])/2 ) ;
       // Prey-specific consumption & energy intake rates: type-II functional response (Hollings disc eqn)
       // CR[j] = CR[j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) ;  
       // ER[j] = ER[j] + fmin(CR_mx, (a[j] * m[j]) / (1 + h[j] * a[j]) ) * Cal_dens[j] ;
