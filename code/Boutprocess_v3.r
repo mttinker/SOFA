@@ -204,11 +204,11 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
                     sum(FD$DT[which(is.na(FD$Preynum) | FD$Preynum == 1)]))/60
     TimeAllocP = colSums(STpr) + colSums(DTpr) 
     TimeAllocUnP = colSums(STpr*NDvUnP) + colSums(DTpr*NDvUnP) 
-    # Adjust proporitonal allocation for prey biomass
+    # Adjust proportional allocation for prey biomass
     lgz = log(TimeAllocP/sum(TimeAllocP))
     AlloctP[b,] = exp(lgz + log(MnMass)) / sum(exp(lgz + log(MnMass)))
     TimeUnsP = (sum(STun) + sum(DTun)) * AlloctP[b,]
-    # Need to correct CR for allocted and unallocated unsuccesful dives: 
+    # Need to correct CR for allocated and un-allocated unsuccessful dives: 
     CrctF_Un[b,] = (TimeAllocP - TimeAllocUnP) / (TimeAllocP + TimeUnsP) 
     ii = which(is.infinite(CrctF_Un[b,]))
     CrctF_Un[b,ii] = 1
@@ -247,7 +247,9 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
       if(length(ii)>0){
         HTmnP[b,p] = mean(FD$HT[ii]/FD$Ncrct[ii])
       }
-      # Mean encounter rate CRmn by prey (and sample size) ** NOTE: also select on Tmtag==0
+      # Mean encounter/capture rate (ECRmn) by prey (and sample size)
+      #  during dives where effort has been allocated to that prey type
+      #  ** NOTE: also select on Tmtag==0
       if(p < NPtypes){
       	ii = which(FD$SuccessV==1 & FD$PreyV==p & FD$Sz_mm>0 & FD$HTT>0 & (FD$HTT - FD$HT) > 30 & FD$Ncrct > 0.9 & FD$Tmtag ==0)
       	ECRmnP_n[b,p] = length(ii)

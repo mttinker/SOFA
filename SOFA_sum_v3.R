@@ -1,4 +1,4 @@
-# SOFA (Sea Otter Forage Analysis), Version 3.1
+# SOFA (Sea Otter Forage Analysis), Version 3.*
 # Step 3, Model Summary.
 # Source this script to generate an html markdown report of results. 
 #

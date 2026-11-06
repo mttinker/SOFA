@@ -1,4 +1,4 @@
-# SOFA (Sea Otter Forage Analysis), Version 3.1
+# SOFA (Sea Otter Forage Analysis), Version 3.*
 # Step 1, Preparation.
 # Source this script to prepare for an analysis of sea otter foraging data. 
 #

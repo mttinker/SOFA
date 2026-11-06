@@ -1,4 +1,4 @@
-# SOFA (Sea Otter Forage Analysis), Version 3.1
+# SOFA (Sea Otter Forage Analysis), Version 3.*
 # Step 2, Model fitting.
 # Source this script to fit the SOFA model to sea otter foraging data. 
 #
@@ -133,15 +133,22 @@ if (SBST==1){
 	# Note: determine which of these potential selection variables has enough levels
 	ix = numeric()
 	for (i in 1:length(slctvars)){
-		if(slctvars[i]==slctvar){
-			ix = c(ix,i)
-		}else{
-			col = which(colnames(dat)==slctvars[i])
-			lvls = as.matrix(table(dat[,col]))
-			if(length(lvls[which(lvls[,1]>100),1])<2){
-				ix = c(ix,i)
-			} 
-		}
+	  col = which(colnames(dat)==slctvars[i])
+	  lvls = as.matrix(table(dat[,col]))
+	  if(length(lvls[which(lvls[,1]>100),1])<2){
+	    ix = c(ix,i)
+	  } 
+		#  
+		#  
+		# if(slctvars[i]==slctvar){
+		# 	ix = c(ix,i)
+		# }else{
+		# 	col = which(colnames(dat)==slctvars[i])
+		# 	lvls = as.matrix(table(dat[,col]))
+		# 	if(length(lvls[which(lvls[,1]>100),1])<2){
+		# 		ix = c(ix,i)
+		# 	} 
+		# }
 	}
 	slctvars = slctvars[-ix]
 }
@@ -342,11 +349,16 @@ if (GrpOpt==0){
 											format(Sys.time(), "%Y_%b_%d_%H"),"hr.rdata"))
 	}
 }else{
+  if(Ngrpvar==1){
+    Grpvar_txt = Grpvar
+  }else{
+    Grpvar_txt = paste(Grpvar, collapse = "_")
+  }
 	if (SBST==1){
-		save.image(paste0("./projects/",Projectname,"/results/Rslt_",slctvardef,"_Grp-",Grpvar,"_", 
+		save.image(paste0("./projects/",Projectname,"/results/Rslt_",slctvardef,"_Grp-",Grpvar_txt,"_", 
 											format(Sys.time(), "%Y_%b_%d_%H"),"hr.rdata"))
 	}else{
-		save.image(paste0("./projects/",Projectname,"/results/Rslt_Grp-",Grpvar,"_", 
+		save.image(paste0("./projects/",Projectname,"/results/Rslt_Grp-",Grpvar_txt,"_", 
 											format(Sys.time(), "%Y_%b_%d_%H"),"hr.rdata"))
 	}
 }

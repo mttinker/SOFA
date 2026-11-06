@@ -376,7 +376,7 @@ mcmc_intervals(post,
                pars = paste0("PiG[",gl,",",seq(1,(NPtypes-1)),"]"),
                prob = 0.8) + 
       scale_y_discrete(name="Diet Type",labels=dfPtp$PreyType) +
-      ggtitle(plot_title,subtitle = paste0("Group level ",Grouplist[gl,4])) + 
+      ggtitle(plot_title,subtitle = paste0("Group level ",Grouplist$Groupname[gl])) + 
       theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
     )
   }
@@ -407,7 +407,7 @@ mcmc_intervals(post,
                pars = paste0("ERg[",gl,",",seq(1,(NPtypes-1)),"]"),
                prob = 0.8) + 
       scale_y_discrete(name="Diet Type",labels=dfPtp$PreyType) +
-      ggtitle(plot_title,subtitle = paste0("Group level ",Grouplist[gl,4])) +
+      ggtitle(plot_title,subtitle = paste0("Group level ",Grouplist$Groupname[gl])) +
      	theme_classic() + theme(axis.text.y = element_text(angle = 45, hjust = 1, vjust=0))
     )
   }
