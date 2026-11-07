@@ -1,13 +1,13 @@
 # SOFA (Sea Otter Forage Analysis), Version 3.*
 # Step 3, Model Summary.
 # Source this script to generate an html markdown report of results. 
-#
+#install.packages('tinytex') 
 rm(list = ls())
 #
 existing_Packages<-as.list(installed.packages()[,1])
 required_Packages<-c('svDialogs', 'rstudioapi', 'readxl', 'openxlsx','tcltk', 'parallel', 'rstan', 
                      'ggplot2', 'gridExtra', 'bayesplot', 'rmarkdown', 'gtools', 'dplyr', 'shiny',
-                     'knitr', 'kableExtra')
+                     'knitr', 'kableExtra', 'tinytex')
 missing_Packages<- required_Packages[!required_Packages %in% existing_Packages]
 if(length(missing_Packages)>0)install.packages(pkgs =  missing_Packages)
 invisible(lapply(required_Packages, require, character.only=T,quietly = T))
@@ -130,6 +130,9 @@ if (file.exists(file.path(tmp_dir,rslts_filename))) {
   #Delete file if it exists
   file.remove(file.path(tmp_dir,rslts_filename))
 }
+#
+# options(tinytex.verbose = TRUE)
+file.copy("./code/SOFA_logo.png", file.path(tmp_dir, "SOFA_logo.png"), overwrite = TRUE)
 #
 render(rmd_pathname,
 			 output_dir = tmp_dir, # NOTE: need to compile to tmp_dir to avoid pathname with spaces (#*^# Microsoft!)
