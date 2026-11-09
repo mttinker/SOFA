@@ -43,6 +43,8 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
      }
    }
   }
+  # Add dummy value for UnID prey (assumed mostly smaller prey)
+  MnMassU = c(MnMass, quantile(MnMass,.25))
   for (b in 1:Nbouts){
     ii = which(Fdat$BoutN==b) 
     FD = Fdat[ii,]
@@ -202,11 +204,11 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     }
     TotMinutes = (sum(FD$ST[which(is.na(FD$Preynum) | FD$Preynum == 1)]) +
                     sum(FD$DT[which(is.na(FD$Preynum) | FD$Preynum == 1)]))/60
-    TimeAllocP = colSums(STpr) + colSums(DTpr) 
+    TimeAllocP = colSums(STpr) + colSums(DTpr) + .0001
     TimeAllocUnP = colSums(STpr*NDvUnP) + colSums(DTpr*NDvUnP) 
     # Adjust proportional allocation for prey biomass
     lgz = log(TimeAllocP/sum(TimeAllocP))
-    AlloctP[b,] = exp(lgz + log(MnMass)) / sum(exp(lgz + log(MnMass)))
+    AlloctP[b,] = exp(lgz + log(MnMassU)) / sum(exp(lgz + log(MnMassU)))
     TimeUnsP = (sum(STun) + sum(DTun)) * AlloctP[b,]
     # Need to correct CR for allocated and un-allocated unsuccessful dives: 
     CrctF_Un[b,] = (TimeAllocP - TimeAllocUnP) / (TimeAllocP + TimeUnsP) 
@@ -299,8 +301,8 @@ Boutprocess <- function(Fdat,Nbouts,NPtypes,Boutlist,MnN1,MnN2,GrpOpt,Ngrp){
     # 
     MLpar1[p] = coef(ft)[1]
     MLpar2[p] = coef(ft)[2]
-    # Add variance reflecting multiple species in prey type (but limit to V = 0.05)
-    logMass_sg[p] = sqrt(logMass_sg[p]^2 + min(0.1, (predict(ft,se.fit = T)$residual.scale)^2) )
+    # Add variance reflecting multiple species in prey type (but limit to V = 0.1)
+    logMass_sg[p] = sqrt(logMass_sg[p]^2 + min(0.1, (ft$s^2) ))
     # Correlation between prey size and HT
     ii = which(!is.na(SmnP[,p]) & !is.na(HTmnP[,p]) )
     rho_HS[p,,] = c(1, rep(max(0.05,cor(log(SmnP[ii,p]),log(HTmnP[ii,p]))),2),1)
